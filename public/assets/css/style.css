@@ -76,7 +76,7 @@
   --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.14);
 
   /* Layout */
-  --sidebar-width: 280px;
+  --sidebar-width: 280barpx;
   --topbar-height: 72px;
 }
 
@@ -189,8 +189,8 @@ input, select, textarea {
 
 .sidebar-logo img,
 .sidebar-logo svg {
-  width: 40px;
-  height: 40px;
+  width: 56px;
+  height: auto;
 }
 
 .sidebar-logo-text {

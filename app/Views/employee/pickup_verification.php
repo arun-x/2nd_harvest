@@ -6,9 +6,11 @@
  * pattern as dashboard.php.
  *
  * Expects (with safe fallbacks for local/dev preview):
- *   array|null $pendingPickup   the scheduled pickup currently being confirmed
+ *   array|null $pendingPickup   the pickup matched by a verified token
  *                                (e.g. ['order_id' => 'ORD-8292', 'collector' => 'Green Valley Pantry'])
- *                                — null means "nothing queued right now"
+ *                                — null means "no token verified yet"
+ *   string|null $tokenError     error message from a failed token submission
+ *   string      $oldToken       previously typed token, to re-fill after an error
  *   int    $successfulToday     count for the stat card
  *   string $weightRescued       e.g. "248kg Rescued"
  *   string $trendPct            e.g. "+12%"
@@ -16,6 +18,8 @@
  */
 
 $pendingPickup   = $pendingPickup   ?? null;
+$tokenError      = $tokenError      ?? null;
+$oldToken        = $oldToken        ?? '';
 $successfulToday = $successfulToday ?? 0;
 $weightRescued   = $weightRescued   ?? '0kg Rescued';
 $trendPct        = $trendPct        ?? null;
@@ -37,15 +41,21 @@ $extraStylesheets = ['dashboard.css'];
       </div>
       <h2 class="confirm-title">Ready to complete pickup?</h2>
       <p class="confirm-desc">
-        Ensure all items are handed over to the collector before confirming.
-        This will mark the current scheduled pickup as completed in the system.
+        Token verified for <strong><?= htmlspecialchars($pendingPickup['collector']) ?></strong>
+        (<?= htmlspecialchars($pendingPickup['order_id']) ?>). Ensure all items are handed over
+        before confirming — this marks the pickup as completed in the system.
       </p>
 
-      <form action="/employee/pickups/<?= htmlspecialchars($pendingPickup['order_id']) ?>/complete" method="post">
+      <form action="/employee/pickups/complete" method="post">
+        <input type="hidden" name="order_id" value="<?= htmlspecialchars($pendingPickup['order_id']) ?>">
         <button type="submit" class="btn btn-primary btn-lg">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
           Confirm Pickup Completed
         </button>
+      </form>
+
+      <form action="/employee/pickups/verify/reset" method="post" class="mt-2">
+        <button type="submit" class="btn btn-ghost btn-sm">Not this pickup? Enter a different token</button>
       </form>
 
       <div class="confirm-note">
@@ -53,14 +63,33 @@ $extraStylesheets = ['dashboard.css'];
         Authenticated session secured by 2nd Harvest
       </div>
     <?php else: ?>
-      <div class="confirm-icon" style="border-color: var(--color-text-muted); color: var(--color-text-muted);">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="confirm-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       </div>
-      <h2 class="confirm-title">No pickup queued</h2>
+      <h2 class="confirm-title">Verify Pickup Token</h2>
       <p class="confirm-desc">
-        Scan a collector's QR code or select a scheduled reservation to begin verification.
+        Ask the collector for the verification token from their Order History
+        or confirmation email, and enter it below.
       </p>
-      <a href="/employee/pickups" class="btn btn-secondary btn-lg">Scan QR Code</a>
+
+      <form action="/employee/pickups/verify/token" method="post" style="width: 100%; max-width: 340px;">
+        <div class="field" style="text-align: left;">
+          <input
+            class="input" type="text" name="token" id="token"
+            placeholder="e.g. CH-77291-B"
+            value="<?= htmlspecialchars($oldToken) ?>"
+            style="text-align: center; letter-spacing: 0.08em; font-family: var(--font-mono); text-transform: uppercase;"
+            autocomplete="off"
+          >
+          <?php if ($tokenError): ?>
+            <div class="field-warning" style="justify-content: center;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <?= htmlspecialchars($tokenError) ?>
+            </div>
+          <?php endif; ?>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg btn-block">Verify Token</button>
+      </form>
     <?php endif; ?>
   </div>
 

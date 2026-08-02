@@ -1,0 +1,389 @@
+/* ==========================================================================
+   landing.css
+   Styles specific to the public marketing homepage. Loaded alongside
+   style.css (shares its tokens/buttons/badges) — this file only adds the
+   page sections that don't exist anywhere in the authenticated app.
+   ========================================================================== */
+
+body.landing {
+  background: var(--color-surface);
+}
+
+/* --------------------------------------------------------------------------
+   Public top nav (different from the app's sidebar+topbar shell)
+   -------------------------------------------------------------------------- */
+.public-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-8);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.public-nav-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  color: var(--color-primary-dark);
+}
+
+.public-nav-logo img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+.public-nav-links {
+  display: flex;
+  gap: var(--space-8);
+}
+
+.public-nav-links a {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  font-size: var(--fs-base);
+}
+
+.public-nav-links a:hover {
+  color: var(--color-text);
+}
+
+.public-nav-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* --------------------------------------------------------------------------
+   Hero
+   -------------------------------------------------------------------------- */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-8);
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-10) var(--space-8);
+}
+
+.hero-heading {
+  font-size: 2.75rem;
+  line-height: 1.15;
+  margin-bottom: var(--space-5);
+}
+
+.hero-heading .accent {
+  color: var(--color-primary);
+}
+
+.hero-desc {
+  color: var(--color-text-secondary);
+  font-size: var(--fs-md);
+  max-width: 46ch;
+  margin-bottom: var(--space-6);
+}
+
+.hero-image {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* --------------------------------------------------------------------------
+   Section heading (centered, used by the stats section)
+   -------------------------------------------------------------------------- */
+.section-heading-center {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto var(--space-8);
+}
+
+.section-heading-center h2 {
+  font-size: var(--fs-2xl);
+  margin-bottom: var(--space-2);
+}
+
+.section-heading-center p {
+  color: var(--color-text-secondary);
+  font-size: var(--fs-base);
+}
+
+/* --------------------------------------------------------------------------
+   Impact stat cards (the public-facing version — bigger + centered,
+   distinct from the dashboard's .stat-card)
+   -------------------------------------------------------------------------- */
+.impact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-5);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-8) var(--space-10);
+}
+
+.impact-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+}
+
+.impact-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-4);
+  color: var(--color-text-inverse);
+}
+
+.impact-icon.tone-1 { background: var(--color-primary-dark); }
+.impact-icon.tone-2 { background: #7bc79e; }
+.impact-icon.tone-3 { background: var(--color-primary-light); color: var(--color-primary-dark); }
+
+.impact-value {
+  font-size: var(--fs-3xl);
+  font-family: var(--font-display);
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+
+.impact-label {
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.impact-desc {
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+}
+
+/* --------------------------------------------------------------------------
+   Partner cards ("Empowering Every Partner")
+   -------------------------------------------------------------------------- */
+.section-heading-underline {
+  font-size: var(--fs-xl);
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-2);
+  border-bottom: 3px solid var(--color-primary);
+  display: inline-block;
+}
+
+.partner-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-5);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-8) var(--space-10);
+}
+
+.partner-card {
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  background: var(--color-primary-lighter);
+}
+
+.partner-card.featured {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+.partner-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+}
+
+.partner-card.featured .partner-icon {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--color-text-inverse);
+}
+
+.partner-title {
+  font-size: var(--fs-lg);
+  margin-bottom: var(--space-2);
+}
+
+.partner-desc {
+  font-size: var(--fs-sm);
+  margin-bottom: var(--space-4);
+  opacity: 0.9;
+}
+
+.partner-card:not(.featured) .partner-desc {
+  color: var(--color-text-secondary);
+}
+
+.partner-checklist {
+  margin-bottom: var(--space-5);
+}
+
+.partner-checklist li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  margin-bottom: var(--space-2);
+}
+
+.partner-card .btn-partner {
+  width: 100%;
+  text-align: center;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: var(--fs-base);
+  border: 1px solid var(--color-primary-dark);
+  color: var(--color-primary-dark);
+  background: transparent;
+  display: block;
+}
+
+.partner-card.featured .btn-partner {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  border-color: transparent;
+}
+
+/* --------------------------------------------------------------------------
+   Dark CTA banner
+   -------------------------------------------------------------------------- */
+.cta-banner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-8) var(--space-10);
+}
+
+.cta-banner-inner {
+  background: #232b26;
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  color: var(--color-text-inverse);
+}
+
+.cta-banner-inner h2 {
+  color: var(--color-text-inverse);
+  font-size: var(--fs-2xl);
+  margin-bottom: var(--space-2);
+}
+
+.cta-banner-inner p {
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: var(--space-5);
+}
+
+.btn-cta-primary {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+.btn-cta-secondary {
+  background: transparent;
+  color: var(--color-text-inverse);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+/* --------------------------------------------------------------------------
+   Footer
+   -------------------------------------------------------------------------- */
+.public-footer {
+  background: var(--color-bg);
+  padding: var(--space-8);
+}
+
+.public-footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
+
+.public-footer-brand h3 {
+  font-size: var(--fs-lg);
+  margin-bottom: var(--space-3);
+}
+
+.public-footer-brand p {
+  color: var(--color-text-secondary);
+  font-size: var(--fs-sm);
+  max-width: 36ch;
+  margin-bottom: var(--space-4);
+}
+
+.public-footer-social {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.public-footer-social a {
+  color: var(--color-text-secondary);
+}
+
+.public-footer-columns {
+  display: flex;
+  gap: var(--space-10);
+}
+
+.public-footer-col h4 {
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-3);
+}
+
+.public-footer-col a {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: var(--fs-sm);
+  margin-bottom: var(--space-2);
+}
+
+.public-footer-col a:hover {
+  color: var(--color-text);
+}
+
+.public-footer-bottom {
+  max-width: 1200px;
+  margin: var(--space-6) auto 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+}
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 1000px) {
+  .hero { grid-template-columns: 1fr; }
+  .impact-grid,
+  .partner-grid { grid-template-columns: 1fr; }
+  .public-nav-links { display: none; }
+  .public-footer-inner { flex-direction: column; }
+}

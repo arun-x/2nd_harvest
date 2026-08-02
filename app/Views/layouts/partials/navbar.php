@@ -53,7 +53,7 @@ $visibleSections = $role === 'admin' ? array_keys($sections) : [$role];
 ?>
 <aside class="sidebar">
   <a href="/" class="sidebar-logo">
-    <img src="/assets/images/logo.svg" alt="">
+    <img src="/assets/images/logo.png" alt="logo" width="50px">
     <div>
       <div class="sidebar-logo-text">2nd Harvest</div>
       <div class="sidebar-logo-tagline">Food Rescue &amp; Sustainability</div>

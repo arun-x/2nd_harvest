@@ -17,7 +17,7 @@ class Auth
     {
         return (object) [
             'id'         => 1,
-            'name'       => 'Alex Rivera',
+            'name'       => 'M.Perera',
             'role'       => 'employee',
             'roleLabel'  => 'Supermarket Staff',
             'avatarUrl'  => null,

@@ -15,15 +15,11 @@
   text-align: center;
 }
  
-.auth-brand-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
-  background: var(--color-primary-dark);
-  color: var(--color-text-inverse);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.auth-brand-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
   margin: 0 auto var(--space-3);
 }
  

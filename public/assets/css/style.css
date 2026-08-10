@@ -257,15 +257,40 @@ input, select, textarea {
   padding-top: var(--space-4);
 }
 
-.sidebar-signout {
+.sidebar-signout,
+button.sidebar-signout {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  width: 100%;
   color: #b45309;
   font-weight: 600;
   font-size: var(--fs-base);
+  font-family: inherit;
+  line-height: 1.2;
   padding: var(--space-2) var(--space-3);
+  margin: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-md, 6px);
+  outline: none;
+  box-shadow: none;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
 }
+.sidebar-signout svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.sidebar-signout::-moz-focus-inner { border: 0; padding: 0; }
+.sidebar-signout:hover { background: rgba(180, 83, 9, 0.06); }
+.sidebar-signout:focus { outline: none; }
+.sidebar-signout:focus-visible { outline: 2px solid rgba(180, 83, 9, 0.35); outline-offset: 2px; }
 
 /* --------------------------------------------------------------------------
    5. Topbar
@@ -360,6 +385,18 @@ input, select, textarea {
   border-radius: 50%;
   background: var(--color-primary-light);
   object-fit: cover;
+}
+
+.user-avatar-initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary, #14532d);
+  font-weight: 700;
+  font-size: 15px;
+  text-transform: uppercase;
+  user-select: none;
+  line-height: 1;
 }
 
 .user-meta {

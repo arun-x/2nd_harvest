@@ -30,7 +30,7 @@ $breadcrumbs  = ['Outlet Dashboard', 'Create Listing'];
 $activeRoute  = 'employee.listings.create';
 $extraScripts = ['create-listing.js'];
 $pageActions = '
-  <a href="/employee/dashboard" class="btn btn-secondary">
+  <a href="/Deployment/2nd-harvest/public/employee/dashboard" class="btn btn-secondary">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     Back
   </a>
@@ -48,7 +48,7 @@ function field_error($errors, $name) {
   Resupply Network
 </div>
  
-<form class="form-layout" action="/employee/listings" method="post" novalidate>
+<form class="form-layout" action="/Deployment/2nd-harvest/public/employee/listings" method="post" novalidate>
   <div>
     <section class="form-section">
       <h2 class="form-section-title">Basic Information</h2>
@@ -86,6 +86,17 @@ function field_error($errors, $name) {
           >
           <?= field_error($errors, 'quantity') ?>
         </div>
+
+        <div class="field">
+          <label class="field-label" for="reference_price">Reference Price (per kg, LKR)</label>
+          <input
+            class="input" type="number" id="reference_price" name="reference_price"
+            min="0" step="0.01" placeholder="e.g., 250.00"
+            value="<?= htmlspecialchars($old['reference_price'] ?? '') ?>"
+          >
+          <small class="field-hint">Consumers see a discount off this price based on remaining shelf life. Leave 0 for free/donation-only.</small>
+          <?= field_error($errors, 'reference_price') ?>
+        </div>
       </div>
     </section>
  
@@ -93,20 +104,14 @@ function field_error($errors, $name) {
       <h2 class="form-section-title">Safety &amp; Logistics</h2>
  
       <div class="field">
-        <label class="field-label" for="best_before_date">Best Before / Expiry</label>
-        <div class="field-row" style="gap: var(--space-3);">
-          <input
-            class="input" type="date" id="best_before_date" name="best_before_date"
-            value="<?= htmlspecialchars($old['best_before_date'] ?? '') ?>"
-          >
-          <input
-            class="input" type="time" id="best_before_time" name="best_before_time"
-            min="09:00" max="22:00" step="900"
-            value="<?= htmlspecialchars($old['best_before_time'] ?? '') ?>"
-          >
-        </div>
+        <label class="field-label" for="best_before_date">Best Before / Expiry Date</label>
+        <input
+          class="input" type="date" id="best_before_date" name="best_before_date"
+          value="<?= htmlspecialchars($old['best_before_date'] ?? date('Y-m-d')) ?>"
+          readonly
+        >
         <div class="field-hint">
-          Pickup stays open until this expiration time. Choose a date up to 2 days out, between 9:00 AM and 10:00 PM.
+          Listings are limited to today. Pickup slots run every 30 minutes until the store closes at 10:30 PM.
         </div>
         <?= field_error($errors, 'best_before') ?>
       </div>

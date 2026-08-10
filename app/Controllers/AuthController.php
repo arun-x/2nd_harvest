@@ -22,7 +22,7 @@ class AuthController extends BaseController
                     ['title' => 'Simple Logistics', 'desc' => 'Instantly upload batch surplus details directly from your inventory.'],
                     ['title' => 'Verified Tax Benefits', 'desc' => 'Generate audit-ready certificates for food donation write-offs.'],
                 ],
-                'image' => '/assets/images/register-supermarket.jpg',
+                'image' => '/Deployment/2nd-harvest/public/assets/images/register-supermarket.jpg',
             ],
             'charity' => [
                 'heading' => 'Make a difference. Register your Charity.',
@@ -31,7 +31,7 @@ class AuthController extends BaseController
                     ['title' => 'Easy Donation Tracking', 'desc' => 'Coordinate food pick-ups and log donation sizes directly within your portal.'],
                     ['title' => 'Community Impact Reports', 'desc' => 'Generate live, shareable social and environmental metrics for your donors.'],
                 ],
-                'image' => '/assets/images/register-charity.jpg',
+                'image' => '/Deployment/2nd-harvest/public/assets/images/register-charity.jpg',
             ],
             'consumer' => [
                 'heading' => 'Join the movement to end food waste.',
@@ -40,7 +40,7 @@ class AuthController extends BaseController
                     ['title' => 'Eco-Friendly', 'desc' => 'Reduce your carbon footprint with every basket rescued.'],
                     ['title' => 'Community Driven', 'desc' => 'Support local businesses and help neighbors in need.'],
                 ],
-                'image' => '/assets/images/register-consumer.jpg',
+                'image' => '/Deployment/2nd-harvest/public/assets/images/register-consumer.jpg',
             ],
         ];
     }
@@ -72,7 +72,7 @@ class AuthController extends BaseController
         $role = $_POST['role'] ?? '';
  
         if (!in_array($role, ['supermarket', 'charity', 'consumer'], true)) {
-            header('Location: /register');
+            header('Location: /Deployment/2nd-harvest/public/register');
             exit;
         }
  
@@ -81,19 +81,63 @@ class AuthController extends BaseController
         if (!empty($errors)) {
             Session::set('register_old', $_POST);
             Session::set('register_errors', $errors);
-            header('Location: /register/' . $role);
+            header('Location: /Deployment/2nd-harvest/public/register/' . $role);
             exit;
         }
  
-        // TODO: once Models/User.php exists, replace this with a real save:
-        //   $this->userModel->create([
-        //       'role' => $role,
-        //       'email' => $_POST['email'],
-        //       'password_hash' => password_hash($_POST['password'], PASSWORD_DEFAULT),
-        //       ...role-specific fields...
-        //   ]);
+        if (User::findByEmail($_POST['email']) !== null) {
+            Session::set('register_old', $_POST);
+            Session::set('register_errors', ['email' => 'That email is already registered.']);
+            header('Location: /Deployment/2nd-harvest/public/register/' . $role);
+            exit;
+        }
+
+        $dbRole = ['supermarket' => 'employee', 'charity' => 'charity', 'consumer' => 'consumer'][$role];
+
+        $fullName = $role === 'consumer'
+            ? trim($_POST['full_name'])
+            : trim($_POST['contact_person']);
+
+        $pdo = Database::connection();
+        try {
+            $pdo->beginTransaction();
+
+            $userId = User::create([
+                'role'          => $dbRole,
+                'email'         => trim($_POST['email']),
+                'password_hash' => password_hash($_POST['password'], PASSWORD_DEFAULT),
+                'full_name'     => $fullName,
+                'phone'         => $_POST['phone'] ?? null,
+                'status'        => 'approved',
+            ]);
+
+            if ($role === 'supermarket') {
+                Outlet::create([
+                    'user_id'         => $userId,
+                    'outlet_name'     => trim($_POST['organization_name']),
+                    'branch_location' => trim($_POST['address']),
+                    'region'          => trim($_POST['branch_name']),
+                ]);
+            } elseif ($role === 'charity') {
+                Charity::create([
+                    'user_id'           => $userId,
+                    'org_name'          => trim($_POST['charity_name']),
+                    'address'           => trim($_POST['service_area']),
+                    'operational_focus' => trim($_POST['charity_type']),
+                ]);
+            }
+
+            $pdo->commit();
+        } catch (Throwable $e) {
+            $pdo->rollBack();
+            Session::set('register_old', $_POST);
+            Session::set('register_errors', ['email' => 'Could not create account. Please try again.']);
+            header('Location: /Deployment/2nd-harvest/public/register/' . $role);
+            exit;
+        }
+
         Session::flash('success', 'Account created! You can now log in.');
-        header('Location: /login');
+        header('Location: /Deployment/2nd-harvest/public/login');
         exit;
     }
  
@@ -145,39 +189,88 @@ class AuthController extends BaseController
         $role     = $_POST['role'] ?? 'supermarket';
         $email    = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
- 
+
+        // Map the UI role value to the DB role value ('supermarket' -> 'employee').
+        $uiToDbRole = [
+            'supermarket' => 'employee',
+            'charity'     => 'charity',
+            'consumer'    => 'consumer',
+        ];
+        if (!isset($uiToDbRole[$role])) {
+            Session::set('login_error', 'Please choose a valid role.');
+            Session::set('login_old_email', $email);
+            Session::set('login_old_role', 'supermarket');
+            header('Location: /Deployment/2nd-harvest/public/login');
+            exit;
+        }
+        $expectedDbRole = $uiToDbRole[$role];
+
         if ($email === '' || $password === '') {
             Session::set('login_error', 'Enter your email and password.');
             Session::set('login_old_email', $email);
             Session::set('login_old_role', $role);
-            header('Location: /login');
+            header('Location: /Deployment/2nd-harvest/public/login');
             exit;
         }
- 
-        // TODO: once Models/User.php exists, replace this with a real check:
-        //   $user = $this->userModel->findByEmail($email);
-        //   if (!$user || !password_verify($password, $user->password_hash)) {
-        //       Session::set('login_error', 'Incorrect email or password.');
-        //       ... redirect back ...
-        //   }
-        Session::set('user_role', $role);
-        Session::set('user_email', $email);
- 
+
+        $user = User::findByEmail($email);
+        if (!$user || !password_verify($password, $user['password_hash'])) {
+            Session::set('login_error', 'Incorrect email or password.');
+            Session::set('login_old_email', $email);
+            Session::set('login_old_role', $role);
+            header('Location: /Deployment/2nd-harvest/public/login');
+            exit;
+        }
+
+        // Enforce that the account's role matches the selected role on the form.
+        // Without this, a Consumer could sign in from the Supermarket tab and vice versa.
+        if ($user['role'] !== $expectedDbRole) {
+            $roleLabels = [
+                'supermarket' => 'Super Market',
+                'charity'     => 'Charity',
+                'consumer'    => 'Consumer',
+            ];
+            Session::set(
+                'login_error',
+                'Those credentials don\'t match a ' . $roleLabels[$role] . ' account.'
+            );
+            Session::set('login_old_email', $email);
+            Session::set('login_old_role', $role);
+            header('Location: /Deployment/2nd-harvest/public/login');
+            exit;
+        }
+
+        Session::set('user_id', (int) $user['id']);
+        Session::set('user_role', $user['role']);
+        Session::set('user_email', $user['email']);
+
+        // Also populate the single 'user' array that Arun's Consumer module
+        // reads via App\Core\Session::get('user'). Both modules now see the
+        // same logged-in user from the same $_SESSION.
+        Session::set('user', [
+            'id'   => (int) $user['id'],
+            'role' => $user['role'],
+            'name' => $user['full_name'],
+        ]);
+
         $destinations = [
-            'supermarket' => '/employee/dashboard',
-            'charity'     => '/', // TODO: point at the charity dashboard once it's built
-            'consumer'    => '/', // TODO: point at the consumer dashboard once it's built
+            'employee' => '/Deployment/2nd-harvest/public/employee/dashboard',
+            'charity'  => '/Deployment/2nd-harvest/public/', // TODO: point at the charity dashboard once it's built
+            'consumer' => '/Deployment/2nd-harvest/public/consumer/dashboard',
+            'admin'    => '/Deployment/2nd-harvest/public/', // TODO: point at the admin dashboard once it's built
         ];
  
-        header('Location: ' . ($destinations[$role] ?? '/'));
+        header('Location: ' . ($destinations[$user['role']] ?? '/Deployment/2nd-harvest/public/'));
         exit;
     }
- 
+
     public function logout(): void
     {
+        Session::forget('user_id');
         Session::forget('user_role');
         Session::forget('user_email');
-        header('Location: /');
+        Session::forget('user');
+        header('Location: /Deployment/2nd-harvest/public/');
         exit;
     }
 }

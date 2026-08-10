@@ -40,21 +40,39 @@ $extraStylesheets = ['dashboard.css'];
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
       <h2 class="confirm-title">Ready to complete pickup?</h2>
+
+      <?php if (!empty($pendingPickup['image'])): ?>
+        <div style="display:flex; gap: var(--space-3); align-items:center; justify-content:center; margin: var(--space-3) 0;">
+          <img
+            src="<?= htmlspecialchars($pendingPickup['image']) ?>"
+            alt="<?= htmlspecialchars($pendingPickup['item_name'] ?? '') ?>"
+            width="72" height="72"
+            style="border-radius: var(--radius-md); object-fit: cover;"
+          >
+          <div style="text-align:left;">
+            <div class="font-semibold"><?= htmlspecialchars($pendingPickup['item_name'] ?? 'Item') ?></div>
+            <div class="text-secondary" style="font-size: var(--fs-sm);">
+              <?= htmlspecialchars(rtrim(rtrim(number_format((float)($pendingPickup['reserved_qty_kg'] ?? 0), 2), '0'), '.')) ?> kg reserved
+            </div>
+          </div>
+        </div>
+      <?php endif; ?>
+
       <p class="confirm-desc">
         Token verified for <strong><?= htmlspecialchars($pendingPickup['collector']) ?></strong>
         (<?= htmlspecialchars($pendingPickup['order_id']) ?>). Ensure all items are handed over
         before confirming — this marks the pickup as completed in the system.
       </p>
 
-      <form action="/employee/pickups/complete" method="post">
-        <input type="hidden" name="order_id" value="<?= htmlspecialchars($pendingPickup['order_id']) ?>">
+      <form action="/Deployment/2nd-harvest/public/employee/pickups/complete" method="post">
+        <input type="hidden" name="reservation_id" value="<?= htmlspecialchars((string)($pendingPickup['reservation_id'] ?? '')) ?>">
         <button type="submit" class="btn btn-primary btn-lg">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
           Confirm Pickup Completed
         </button>
       </form>
 
-      <form action="/employee/pickups/verify/reset" method="post" class="mt-2">
+      <form action="/Deployment/2nd-harvest/public/employee/pickups/verify/reset" method="post" class="mt-2">
         <button type="submit" class="btn btn-ghost btn-sm">Not this pickup? Enter a different token</button>
       </form>
 
@@ -72,11 +90,11 @@ $extraStylesheets = ['dashboard.css'];
         or confirmation email, and enter it below.
       </p>
 
-      <form action="/employee/pickups/verify/token" method="post" style="width: 100%; max-width: 340px;">
+      <form action="/Deployment/2nd-harvest/public/employee/pickups/verify/token" method="post" style="width: 100%; max-width: 340px;">
         <div class="field" style="text-align: left;">
           <input
             class="input" type="text" name="token" id="token"
-            placeholder="e.g. CH-77291-B"
+            placeholder="e.g. HRV-A3B7F1"
             value="<?= htmlspecialchars($oldToken) ?>"
             style="text-align: center; letter-spacing: 0.08em; font-family: var(--font-mono); text-transform: uppercase;"
             autocomplete="off"
@@ -117,7 +135,7 @@ $extraStylesheets = ['dashboard.css'];
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           Recent History
         </h2>
-        <a href="/employee/pickups/history" class="text-primary font-semibold" style="font-size: var(--fs-sm);">View All</a>
+        <a href="/Deployment/2nd-harvest/public/employee/pickups/history" class="text-primary font-semibold" style="font-size: var(--fs-sm);">View All</a>
       </div>
 
       <?php if (empty($recentHistory)): ?>

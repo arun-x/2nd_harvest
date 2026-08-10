@@ -22,7 +22,9 @@ $listing = $listing ?? [
   'expires_label'   => '—',
   'pickup_location' => '—',
   'listing_ref'     => 'LST-0000',
+  'image'           => '/Deployment/2nd-harvest/public/assets/images/produce-crate.jpg',
 ];
+$listing['image'] = $listing['image'] ?? '/Deployment/2nd-harvest/public/assets/images/produce-crate.jpg';
 
 // Layout/page chrome — consumed by layouts/main.php
 $pageTitle    = null; // no page-header banner here — the confirm panel is the header
@@ -42,10 +44,10 @@ $activeRoute  = 'employee.listings.create';
     </p>
 
     <div class="flex gap-3">
-      <a href="/marketplace/listings/<?= htmlspecialchars($listing['id']) ?>" class="btn btn-primary btn-lg">
-        View on Marketplace
+      <a href="/Deployment/2nd-harvest/public/employee/dashboard" class="btn btn-primary btn-lg">
+        Go to Dashboard
       </a>
-      <a href="/employee/listings/create" class="btn btn-secondary btn-lg">
+      <a href="/Deployment/2nd-harvest/public/employee/listings/create" class="btn btn-secondary btn-lg">
         Create Another
       </a>
     </div>
@@ -59,6 +61,23 @@ $activeRoute  = 'employee.listings.create';
   <section class="card mt-4">
     <div class="card-header">
       <h2 class="card-title">Listing Summary</h2>
+    </div>
+
+    <div style="display:flex; gap: var(--space-4); align-items:center; padding: var(--space-3) 0;">
+      <img
+        src="<?= htmlspecialchars($listing['image']) ?>"
+        alt="<?= htmlspecialchars($listing['title']) ?>"
+        width="96" height="96"
+        style="border-radius: var(--radius-md); object-fit: cover; flex: 0 0 auto;"
+      >
+      <div>
+        <div class="font-semibold" style="font-size: var(--fs-lg);">
+          <?= htmlspecialchars($listing['title']) ?>
+        </div>
+        <div class="text-secondary" style="font-size: var(--fs-sm);">
+          <?= htmlspecialchars($listing['category']) ?> · <?= htmlspecialchars($listing['quantity']) ?>
+        </div>
+      </div>
     </div>
 
     <div class="modal-list-item">
@@ -84,6 +103,6 @@ $activeRoute  = 'employee.listings.create';
   </section>
 
   <div class="flex justify-between mt-4">
-    <a href="/employee/dashboard" class="btn btn-ghost">&larr; Back to Dashboard</a>
+    <a href="/Deployment/2nd-harvest/public/employee/dashboard" class="btn btn-ghost">&larr; Back to Dashboard</a>
   </div>
 </div>

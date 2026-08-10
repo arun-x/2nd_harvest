@@ -37,12 +37,15 @@ INSERT INTO charities (user_id, org_name, address, operational_focus) VALUES
 -- LISTINGS posted by the outlet (outlet_id = 1, posted_by = user 1)
 -- ---------------------------------------------------------------
 INSERT INTO listings
-  (outlet_id, item_name, category, quantity_kg, quantity_remaining_kg,
+  (outlet_id, item_name, category, quantity_kg, quantity_remaining_kg, reference_price,
    expiry_date, claim_deadline, status, posted_by)
 VALUES
-(1, 'Bananas',       'fruit',     12.5, 12.5, CURDATE(),                       CONCAT(CURDATE(), ' 19:00:00'), 'available', 1),
-(1, 'Carrots',       'vegetable',  8.0,  8.0, DATE_ADD(CURDATE(), INTERVAL 1 DAY), CONCAT(CURDATE(), ' 19:00:00'), 'available', 1),
-(1, 'Tomatoes',      'vegetable', 15.0,  0.0, CURDATE(),                       CONCAT(CURDATE(), ' 19:00:00'), 'collected', 1);
+(1, 'Bananas',                 'fruit',      12.5, 12.5,  3.50, CURDATE(),                            CONCAT(CURDATE(), ' 19:00:00'), 'available', 1),
+(1, 'Carrots',                 'vegetable',   8.0,  8.0,  2.20, DATE_ADD(CURDATE(), INTERVAL 1 DAY),  CONCAT(CURDATE(), ' 19:00:00'), 'available', 1),
+(1, 'Tomatoes',                'vegetable',  15.0,  0.0,  2.80, CURDATE(),                            CONCAT(CURDATE(), ' 19:00:00'), 'collected', 1),
+(1, 'Mixed Organic Greens',    'vegetable',  12.0, 12.0,  5.00, CURDATE(),                            CONCAT(CURDATE(), ' 19:00:00'), 'available', 1),
+(1, 'Ripe Avocado Crate',      'fruit',       8.0,  8.0, 25.00, CURDATE(),                            CONCAT(CURDATE(), ' 19:00:00'), 'available', 1),
+(1, 'Heirloom Tomato Crate',   'vegetable',  24.0, 24.0,  2.00, DATE_ADD(CURDATE(), INTERVAL 2 DAY),  CONCAT(CURDATE(), ' 19:00:00'), 'available', 1);
 
 -- ---------------------------------------------------------------
 -- PICKUP SLOTS for the first two listings
@@ -50,7 +53,14 @@ VALUES
 INSERT INTO pickup_slots (listing_id, slot_start, slot_end, capacity) VALUES
 (1, CONCAT(CURDATE(), ' 19:00:00'), CONCAT(CURDATE(), ' 19:30:00'), 3),
 (1, CONCAT(CURDATE(), ' 19:30:00'), CONCAT(CURDATE(), ' 20:00:00'), 3),
-(2, CONCAT(CURDATE(), ' 19:00:00'), CONCAT(CURDATE(), ' 19:30:00'), 2);
+(2, CONCAT(CURDATE(), ' 19:00:00'), CONCAT(CURDATE(), ' 19:30:00'), 2),
+-- Consumer-window slots for Arun's demo listings (id 4–6, opens 8:30 PM):
+(4, CONCAT(CURDATE(), ' 20:30:00'), CONCAT(CURDATE(), ' 21:00:00'), 4),
+(5, CONCAT(CURDATE(), ' 20:30:00'), CONCAT(CURDATE(), ' 21:00:00'), 4),
+(6, CONCAT(CURDATE(), ' 20:30:00'), CONCAT(CURDATE(), ' 21:00:00'), 4),
+(4, CONCAT(CURDATE(), ' 21:00:00'), CONCAT(CURDATE(), ' 21:30:00'), 4),
+(5, CONCAT(CURDATE(), ' 21:00:00'), CONCAT(CURDATE(), ' 21:30:00'), 4),
+(6, CONCAT(CURDATE(), ' 21:00:00'), CONCAT(CURDATE(), ' 21:30:00'), 4);
 
 -- ---------------------------------------------------------------
 -- A completed reservation + pickup for the third (collected) listing

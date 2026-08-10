@@ -61,6 +61,7 @@ CREATE TABLE listings (
   category        ENUM('fruit','vegetable') NOT NULL,
   quantity_kg     DECIMAL(6,2) NOT NULL,
   quantity_remaining_kg DECIMAL(6,2) NOT NULL,
+  reference_price DECIMAL(10,2) NOT NULL DEFAULT 0.00,  -- per-kg price the Consumer discount engine reduces
   expiry_date     DATE NOT NULL,
   claim_deadline  DATETIME NOT NULL,          -- clamped to 7:00 PM same day
   status          ENUM('available','reserved','collected','expired','removed')

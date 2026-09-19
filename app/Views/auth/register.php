@@ -149,7 +149,7 @@ function reg_error($errors, $key) {
                   <label class="field-label" for="branch_name">Branch Name</label>
                   <div class="input-icon-wrap">
                     <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></span>
-                    <input class="input" type="text" id="branch_name" name="branch_name" placeholder="Downtown Suite 10" value="<?= reg_val($old, 'branch_name') ?>">
+                    <input class="input" type="text" id="branch_name" name="branch_name" placeholder="Bambalapitiya" value="<?= reg_val($old, 'branch_name') ?>">
                   </div>
                   <?= reg_error($errors, 'branch_name') ?>
                 </div>
@@ -168,7 +168,7 @@ function reg_error($errors, $key) {
                   <label class="field-label" for="contact_person">Contact Person (Full Name)</label>
                   <div class="input-icon-wrap">
                     <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-                    <input class="input" type="text" id="contact_person" name="contact_person" placeholder="Jane Smith" value="<?= reg_val($old, 'contact_person') ?>">
+                    <input class="input" type="text" id="contact_person" name="contact_person" placeholder="Saman Perera" value="<?= reg_val($old, 'contact_person') ?>">
                   </div>
                   <?= reg_error($errors, 'contact_person') ?>
                 </div>
@@ -179,7 +179,7 @@ function reg_error($errors, $key) {
                   <label class="field-label" for="email">Email Address</label>
                   <div class="input-icon-wrap">
                     <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z" opacity="0"/><path d="M22 6 12 13 2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></span>
-                    <input class="input" type="email" id="email" name="email" placeholder="jane@freshfoods.com" value="<?= reg_val($old, 'email') ?>">
+                    <input class="input" type="email" id="email" name="email" placeholder="samanperera@gmail.com" value="<?= reg_val($old, 'email') ?>">
                   </div>
                   <?= reg_error($errors, 'email') ?>
                 </div>
@@ -187,7 +187,7 @@ function reg_error($errors, $key) {
                   <label class="field-label" for="phone">Phone Number</label>
                   <div class="input-icon-wrap">
                     <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>
-                    <input class="input" type="tel" id="phone" name="phone" placeholder="+1 (555) 019-2834" value="<?= reg_val($old, 'phone') ?>">
+                    <input class="input" type="tel" id="phone" name="phone" placeholder="+94 70 783 4728" value="<?= reg_val($old, 'phone') ?>">
                   </div>
                   <?= reg_error($errors, 'phone') ?>
                 </div>
@@ -209,7 +209,7 @@ function reg_error($errors, $key) {
                   <label class="field-label" for="address">Location / Store Address</label>
                   <div class="input-icon-wrap">
                     <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
-                    <input class="input" type="text" id="address" name="address" placeholder="123 Retail Blvd, CA" value="<?= reg_val($old, 'address') ?>">
+                    <input class="input" type="text" id="address" name="address" placeholder="10/2 Galle Road, Col 4" value="<?= reg_val($old, 'address') ?>">
                   </div>
                   <?= reg_error($errors, 'address') ?>
                 </div>
@@ -230,7 +230,7 @@ function reg_error($errors, $key) {
                   <label class="field-label" for="charity_name">Charity Name</label>
                   <div class="input-icon-wrap">
                     <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></span>
-                    <input class="input" type="text" id="charity_name" name="charity_name" placeholder="Hope Community Kitchen" value="<?= reg_val($old, 'charity_name') ?>">
+                    <input class="input" type="text" id="charity_name" name="charity_name" placeholder="Hope Elders Home" value="<?= reg_val($old, 'charity_name') ?>">
                   </div>
                   <?= reg_error($errors, 'charity_name') ?>
                 </div>
@@ -241,7 +241,7 @@ function reg_error($errors, $key) {
                   <label class="field-label" for="charity_type">Charity Type</label>
                   <select class="select" id="charity_type" name="charity_type">
                     <option value="">Select type...</option>
-                    <?php foreach (['Food Bank / Soup Kitchen', 'Shelter', 'Community Center', 'Religious Organization', 'Other'] as $type): ?>
+                    <?php foreach (['Food Bank', 'Shelter', 'Community Center', 'Religious Organization', 'Other'] as $type): ?>
                       <option value="<?= htmlspecialchars($type) ?>" <?= ($old['charity_type'] ?? '') === $type ? 'selected' : '' ?>><?= htmlspecialchars($type) ?></option>
                     <?php endforeach; ?>
                   </select>
@@ -251,7 +251,7 @@ function reg_error($errors, $key) {
                   <label class="field-label" for="contact_person">Contact Person (Full Name)</label>
                   <div class="input-icon-wrap">
                     <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-                    <input class="input" type="text" id="contact_person" name="contact_person" placeholder="Sarah Jenkins" value="<?= reg_val($old, 'contact_person') ?>">
+                    <input class="input" type="text" id="contact_person" name="contact_person" placeholder="Saman Perera" value="<?= reg_val($old, 'contact_person') ?>">
                   </div>
                   <?= reg_error($errors, 'contact_person') ?>
                 </div>
@@ -262,7 +262,7 @@ function reg_error($errors, $key) {
                   <label class="field-label" for="email">Email Address</label>
                   <div class="input-icon-wrap">
                     <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 6 12 13 2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></span>
-                    <input class="input" type="email" id="email" name="email" placeholder="contact@hopekitchen.org" value="<?= reg_val($old, 'email') ?>">
+                    <input class="input" type="email" id="email" name="email" placeholder="samanperera@gmail.com" value="<?= reg_val($old, 'email') ?>">
                   </div>
                   <?= reg_error($errors, 'email') ?>
                 </div>
@@ -270,7 +270,7 @@ function reg_error($errors, $key) {
                   <label class="field-label" for="phone">Phone Number</label>
                   <div class="input-icon-wrap">
                     <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>
-                    <input class="input" type="tel" id="phone" name="phone" placeholder="+1 (555) 382-9182" value="<?= reg_val($old, 'phone') ?>">
+                    <input class="input" type="tel" id="phone" name="phone" placeholder="+94 70 465 2738" value="<?= reg_val($old, 'phone') ?>">
                   </div>
                   <?= reg_error($errors, 'phone') ?>
                 </div>
@@ -292,7 +292,7 @@ function reg_error($errors, $key) {
                   <label class="field-label" for="service_area">Location / Service Area</label>
                   <div class="input-icon-wrap">
                     <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
-                    <input class="input" type="text" id="service_area" name="service_area" placeholder="Metro Atlanta, GA" value="<?= reg_val($old, 'service_area') ?>">
+                    <input class="input" type="text" id="service_area" name="service_area" placeholder="9/29 Kynsey road" value="<?= reg_val($old, 'service_area') ?>">
                   </div>
                   <?= reg_error($errors, 'service_area') ?>
                 </div>
@@ -305,7 +305,7 @@ function reg_error($errors, $key) {
                   <label class="field-label" for="full_name">Full Name</label>
                   <div class="input-icon-wrap">
                     <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-                    <input class="input" type="text" id="full_name" name="full_name" placeholder="John Doe" value="<?= reg_val($old, 'full_name') ?>">
+                    <input class="input" type="text" id="full_name" name="full_name" placeholder="Saman Perera" value="<?= reg_val($old, 'full_name') ?>">
                   </div>
                   <?= reg_error($errors, 'full_name') ?>
                 </div>
@@ -313,7 +313,7 @@ function reg_error($errors, $key) {
                   <label class="field-label" for="email">Email Address</label>
                   <div class="input-icon-wrap">
                     <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 6 12 13 2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></span>
-                    <input class="input" type="email" id="email" name="email" placeholder="john@example.com" value="<?= reg_val($old, 'email') ?>">
+                    <input class="input" type="email" id="email" name="email" placeholder="samanperera@gmail.com" value="<?= reg_val($old, 'email') ?>">
                   </div>
                   <?= reg_error($errors, 'email') ?>
                 </div>
@@ -336,7 +336,7 @@ function reg_error($errors, $key) {
                 <label class="field-label" for="location">Location / Store Address</label>
                 <div class="input-icon-wrap">
                   <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
-                  <input class="input" type="text" id="location" name="location" placeholder="City, Zip Code" value="<?= reg_val($old, 'location') ?>">
+                  <input class="input" type="text" id="location" name="location" placeholder="Bambalapitiya" value="<?= reg_val($old, 'location') ?>">
                 </div>
                 <?= reg_error($errors, 'location') ?>
               </div>

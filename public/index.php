@@ -12,6 +12,14 @@
 // 1) namespaced autoloader — resolves App\* to /app_ns/*
 require __DIR__ . '/../vendor_autoload.php';
 
+// BASE_URL — the URL path this app is served from, computed at runtime so
+// the project works regardless of where it's cloned (XAMPP htdocs subdir,
+// virtual host, etc.). Example: /GitTest/Arun/public on this machine.
+if (!defined('BASE_URL')) {
+    $__base = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+    define('BASE_URL', rtrim($__base, '/'));
+}
+
 // 2) Malinka's non-namespaced core + auth stack
 require __DIR__ . '/../app/Core/Router.php';
 require __DIR__ . '/../app/Core/Session.php';

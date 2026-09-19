@@ -1,6 +1,6 @@
 <?php
 /** @var string $active */
-$base = '/Deployment/2nd-harvest/public';
+$base = BASE_URL;
 ?>
 <aside class="sidebar">
   <div class="sidebar-brand">

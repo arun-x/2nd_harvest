@@ -111,14 +111,14 @@ class EmployeeController extends BaseController
                 'title' => 'Expired: Sweet Bell Peppers',
                 'meta' => 'SKU VEG-BEL-005 · 5 units',
                 'action_label' => 'Clear Listing',
-                'action_href' => '/Deployment/2nd-harvest/public/employee/listings/5',
+                'action_href' => BASE_URL . '/employee/listings/5',
             ],
             [
                 'type' => 'warning',
                 'title' => 'Expiring Today: Ripe Bananas',
                 'meta' => '20 units remaining · Donate now',
                 'action_label' => 'Push to Charity',
-                'action_href' => '/Deployment/2nd-harvest/public/employee/listings/2/push',
+                'action_href' => BASE_URL . '/employee/listings/2/push',
             ],
         ];
  
@@ -151,7 +151,7 @@ class EmployeeController extends BaseController
     // then a category-wide default, then a generic crate.
     private function imageFor(string $itemName, string $category): string
     {
-        $base = '/Deployment/2nd-harvest/public/assets/images/';
+        $base = BASE_URL . '/assets/images/';
         $name = strtolower($itemName);
 
         // Order matters: more specific keywords first (e.g. "bell pepper"
@@ -193,7 +193,7 @@ class EmployeeController extends BaseController
     {
         if ((int) date('H') * 60 + (int) date('i') >= 19 * 60) {
             Session::flash('error', 'The 7:00 PM posting deadline has passed. New listings resume tomorrow.');
-            header('Location: /Deployment/2nd-harvest/public/employee/dashboard');
+            header('Location: ' . BASE_URL . '/employee/dashboard');
             exit;
         }
 
@@ -219,7 +219,7 @@ class EmployeeController extends BaseController
         // priority window begins. After 7 PM, block new listings entirely.
         if ((int) date('H') * 60 + (int) date('i') >= 19 * 60) {
             Session::flash('error', 'The 7:00 PM posting deadline has passed. New listings resume tomorrow.');
-            header('Location: /Deployment/2nd-harvest/public/employee/dashboard');
+            header('Location: ' . BASE_URL . '/employee/dashboard');
             exit;
         }
 
@@ -241,7 +241,7 @@ class EmployeeController extends BaseController
         if (!empty($errors)) {
             Session::set('listing_form_old', $input);
             Session::set('listing_form_errors', $errors);
-            header('Location: /Deployment/2nd-harvest/public/employee/listings/create');
+            header('Location: ' . BASE_URL . '/employee/listings/create');
             exit;
         }
 
@@ -249,7 +249,7 @@ class EmployeeController extends BaseController
         $outlet = $user ? Outlet::findByUserId($user->id) : null;
         if (!$user || !$outlet) {
             Session::flash('error', 'Your account is not linked to an outlet. Log in as a supermarket user.');
-            header('Location: /Deployment/2nd-harvest/public/employee/dashboard');
+            header('Location: ' . BASE_URL . '/employee/dashboard');
             exit;
         }
 
@@ -288,7 +288,7 @@ class EmployeeController extends BaseController
         ];
 
         Session::set('just_published', $listing);
-        header('Location: /Deployment/2nd-harvest/public/employee/listings/published');
+        header('Location: ' . BASE_URL . '/employee/listings/published');
         exit;
     }
  
@@ -298,7 +298,7 @@ class EmployeeController extends BaseController
         $listing = Listing::find($id);
         if (!$listing) {
             Session::flash('error', 'Listing not found.');
-            header('Location: /Deployment/2nd-harvest/public/employee/dashboard');
+            header('Location: ' . BASE_URL . '/employee/dashboard');
             exit;
         }
 
@@ -331,7 +331,7 @@ class EmployeeController extends BaseController
         $id = (int) $id;
         $listing = Listing::find($id);
         if (!$listing) {
-            header('Location: /Deployment/2nd-harvest/public/employee/dashboard');
+            header('Location: ' . BASE_URL . '/employee/dashboard');
             exit;
         }
 
@@ -351,7 +351,7 @@ class EmployeeController extends BaseController
         if (!empty($errors)) {
             Session::set('listing_form_old', $input);
             Session::set('listing_form_errors', $errors);
-            header('Location: /Deployment/2nd-harvest/public/employee/listings/' . $id . '/edit');
+            header('Location: ' . BASE_URL . '/employee/listings/' . $id . '/edit');
             exit;
         }
 
@@ -370,7 +370,7 @@ class EmployeeController extends BaseController
         ]);
 
         Session::flash('success', 'Listing updated.');
-        header('Location: /Deployment/2nd-harvest/public/employee/dashboard');
+        header('Location: ' . BASE_URL . '/employee/dashboard');
         exit;
     }
 
@@ -378,7 +378,7 @@ class EmployeeController extends BaseController
     {
         Listing::delete((int) $id);
         Session::flash('success', 'Listing deleted.');
-        header('Location: /Deployment/2nd-harvest/public/employee/dashboard');
+        header('Location: ' . BASE_URL . '/employee/dashboard');
         exit;
     }
 
@@ -517,14 +517,14 @@ class EmployeeController extends BaseController
 
         if ($token === '') {
             Session::set('token_error', 'Enter a token to continue.');
-            header('Location: /Deployment/2nd-harvest/public/employee/pickups/verify');
+            header('Location: ' . BASE_URL . '/employee/pickups/verify');
             exit;
         }
 
         if ($outletId === 0) {
             Session::set('token_error', 'Your account is not linked to an outlet — cannot verify pickups.');
             Session::set('token_old', $token);
-            header('Location: /Deployment/2nd-harvest/public/employee/pickups/verify');
+            header('Location: ' . BASE_URL . '/employee/pickups/verify');
             exit;
         }
 
@@ -532,7 +532,7 @@ class EmployeeController extends BaseController
         if (!$reservation) {
             Session::set('token_error', 'That token was not recognized (or the reservation is not for this outlet).');
             Session::set('token_old', $token);
-            header('Location: /Deployment/2nd-harvest/public/employee/pickups/verify');
+            header('Location: ' . BASE_URL . '/employee/pickups/verify');
             exit;
         }
 
@@ -554,14 +554,14 @@ class EmployeeController extends BaseController
                                   ),
         ]);
 
-        header('Location: /Deployment/2nd-harvest/public/employee/pickups/verify');
+        header('Location: ' . BASE_URL . '/employee/pickups/verify');
         exit;
     }
 
     public function resetPickupVerification(): void
     {
         Session::forget('verified_pickup');
-        header('Location: /Deployment/2nd-harvest/public/employee/pickups/verify');
+        header('Location: ' . BASE_URL . '/employee/pickups/verify');
         exit;
     }
 
@@ -573,7 +573,7 @@ class EmployeeController extends BaseController
         // Guard against a stale/tampered form post that doesn't match what
         // was actually verified.
         if (!$pendingPickup || (int) $pendingPickup['reservation_id'] !== $postedResId) {
-            header('Location: /Deployment/2nd-harvest/public/employee/pickups/verify');
+            header('Location: ' . BASE_URL . '/employee/pickups/verify');
             exit;
         }
 
@@ -586,7 +586,7 @@ class EmployeeController extends BaseController
         if (!$reservation || !$user || $outletId === 0) {
             Session::flash('error', 'Could not complete pickup — session or account state changed.');
             Session::forget('verified_pickup');
-            header('Location: /Deployment/2nd-harvest/public/employee/pickups/verify');
+            header('Location: ' . BASE_URL . '/employee/pickups/verify');
             exit;
         }
 
@@ -594,14 +594,14 @@ class EmployeeController extends BaseController
         if (!$listing || (int) $listing['outlet_id'] !== $outletId) {
             Session::flash('error', 'This reservation is not for your outlet.');
             Session::forget('verified_pickup');
-            header('Location: /Deployment/2nd-harvest/public/employee/pickups/verify');
+            header('Location: ' . BASE_URL . '/employee/pickups/verify');
             exit;
         }
 
         if ($reservation['status'] !== 'active') {
             Session::flash('error', 'That reservation is no longer active.');
             Session::forget('verified_pickup');
-            header('Location: /Deployment/2nd-harvest/public/employee/pickups/verify');
+            header('Location: ' . BASE_URL . '/employee/pickups/verify');
             exit;
         }
 
@@ -627,7 +627,7 @@ class EmployeeController extends BaseController
             $db->rollBack();
             error_log($e->getMessage());
             Session::flash('error', 'Could not complete pickup. Please try again.');
-            header('Location: /Deployment/2nd-harvest/public/employee/pickups/verify');
+            header('Location: ' . BASE_URL . '/employee/pickups/verify');
             exit;
         }
 
@@ -644,7 +644,7 @@ class EmployeeController extends BaseController
 
         Session::forget('verified_pickup');
         Session::flash('success', 'Pickup for ' . $pendingPickup['collector'] . ' marked complete.');
-        header('Location: /Deployment/2nd-harvest/public/employee/pickups/verify');
+        header('Location: ' . BASE_URL . '/employee/pickups/verify');
         exit;
     }
  
@@ -652,7 +652,7 @@ class EmployeeController extends BaseController
     {
         $user   = Auth::user();
         if (!$user) {
-            header('Location: /Deployment/2nd-harvest/public/login');
+            header('Location: ' . BASE_URL . '/login');
             exit;
         }
         $userRow = User::find($user->id);
@@ -682,7 +682,7 @@ class EmployeeController extends BaseController
     {
         $user = Auth::user();
         if (!$user) {
-            header('Location: /Deployment/2nd-harvest/public/login');
+            header('Location: ' . BASE_URL . '/login');
             exit;
         }
 
@@ -703,7 +703,7 @@ class EmployeeController extends BaseController
         if ($errors) {
             Session::set('profile_form_old', $input);
             Session::set('profile_form_errors', $errors);
-            header('Location: /Deployment/2nd-harvest/public/employee/profile');
+            header('Location: ' . BASE_URL . '/employee/profile');
             exit;
         }
 
@@ -722,7 +722,7 @@ class EmployeeController extends BaseController
         }
 
         Session::flash('success', 'Profile updated.');
-        header('Location: /Deployment/2nd-harvest/public/employee/profile');
+        header('Location: ' . BASE_URL . '/employee/profile');
         exit;
     }
 
@@ -730,7 +730,7 @@ class EmployeeController extends BaseController
     {
         $user = Auth::user();
         if (!$user) {
-            header('Location: /Deployment/2nd-harvest/public/login');
+            header('Location: ' . BASE_URL . '/login');
             exit;
         }
 
@@ -752,13 +752,13 @@ class EmployeeController extends BaseController
 
         if ($errors) {
             Session::set('password_form_errors', $errors);
-            header('Location: /Deployment/2nd-harvest/public/employee/profile#password');
+            header('Location: ' . BASE_URL . '/employee/profile#password');
             exit;
         }
 
         User::updatePassword($user->id, password_hash($next, PASSWORD_DEFAULT));
         Session::flash('success', 'Password changed.');
-        header('Location: /Deployment/2nd-harvest/public/employee/profile');
+        header('Location: ' . BASE_URL . '/employee/profile');
         exit;
     }
 

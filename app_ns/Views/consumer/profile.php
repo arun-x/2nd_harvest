@@ -6,7 +6,7 @@
  * @var array $pwErrors Field errors from the password form.
  * @var string $csrf    Session CSRF token.
  */
-$base = '/Deployment/2nd-harvest/public';
+$base = BASE_URL;
 
 $val = function (string $key, $fallback = '') use ($old) {
     return htmlspecialchars((string) ($old[$key] ?? $fallback));

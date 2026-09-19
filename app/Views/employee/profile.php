@@ -50,7 +50,7 @@ $err = function (array $bag, string $key) {
       </div>
     </section>
 
-    <form class="form-section" action="/Deployment/2nd-harvest/public/employee/profile" method="post" novalidate>
+    <form class="form-section" action="<?= BASE_URL ?>/employee/profile" method="post" novalidate>
       <h2 class="form-section-title">Contact &amp; Outlet Details</h2>
 
       <div class="field-row">
@@ -93,11 +93,11 @@ $err = function (array $bag, string $key) {
 
       <div class="flex gap-3" style="margin-top: 16px;">
         <button type="submit" class="btn btn-primary">Save changes</button>
-        <a href="/Deployment/2nd-harvest/public/employee/dashboard" class="btn btn-secondary">Cancel</a>
+        <a href="<?= BASE_URL ?>/employee/dashboard" class="btn btn-secondary">Cancel</a>
       </div>
     </form>
 
-    <form id="password" class="form-section" action="/Deployment/2nd-harvest/public/employee/profile/password" method="post" novalidate>
+    <form id="password" class="form-section" action="<?= BASE_URL ?>/employee/profile/password" method="post" novalidate>
       <h2 class="form-section-title">Change Password</h2>
       <p class="text-muted" style="font-size: var(--fs-sm); margin-top: -8px; margin-bottom: 16px;">
         Enter your current password, then choose a new one (minimum 8 characters).

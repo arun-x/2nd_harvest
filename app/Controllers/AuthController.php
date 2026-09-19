@@ -22,7 +22,7 @@ class AuthController extends BaseController
                     ['title' => 'Simple Logistics', 'desc' => 'Instantly upload batch surplus details directly from your inventory.'],
                     ['title' => 'Verified Tax Benefits', 'desc' => 'Generate audit-ready certificates for food donation write-offs.'],
                 ],
-                'image' => '/Deployment/2nd-harvest/public/assets/images/register-supermarket.jpg',
+                'image' => BASE_URL . '/assets/images/register-supermarket.jpg',
             ],
             'charity' => [
                 'heading' => 'Make a difference. Register your Charity.',
@@ -31,7 +31,7 @@ class AuthController extends BaseController
                     ['title' => 'Easy Donation Tracking', 'desc' => 'Coordinate food pick-ups and log donation sizes directly within your portal.'],
                     ['title' => 'Community Impact Reports', 'desc' => 'Generate live, shareable social and environmental metrics for your donors.'],
                 ],
-                'image' => '/Deployment/2nd-harvest/public/assets/images/register-charity.jpg',
+                'image' => BASE_URL . '/assets/images/register-charity.jpg',
             ],
             'consumer' => [
                 'heading' => 'Join the movement to end food waste.',
@@ -40,7 +40,7 @@ class AuthController extends BaseController
                     ['title' => 'Eco-Friendly', 'desc' => 'Reduce your carbon footprint with every basket rescued.'],
                     ['title' => 'Community Driven', 'desc' => 'Support local businesses and help neighbors in need.'],
                 ],
-                'image' => '/Deployment/2nd-harvest/public/assets/images/register-consumer.jpg',
+                'image' => BASE_URL . '/assets/images/register-consumer.jpg',
             ],
         ];
     }
@@ -72,7 +72,7 @@ class AuthController extends BaseController
         $role = $_POST['role'] ?? '';
  
         if (!in_array($role, ['supermarket', 'charity', 'consumer'], true)) {
-            header('Location: /Deployment/2nd-harvest/public/register');
+            header('Location: ' . BASE_URL . '/register');
             exit;
         }
  
@@ -81,14 +81,14 @@ class AuthController extends BaseController
         if (!empty($errors)) {
             Session::set('register_old', $_POST);
             Session::set('register_errors', $errors);
-            header('Location: /Deployment/2nd-harvest/public/register/' . $role);
+            header('Location: ' . BASE_URL . '/register/' . $role);
             exit;
         }
  
         if (User::findByEmail($_POST['email']) !== null) {
             Session::set('register_old', $_POST);
             Session::set('register_errors', ['email' => 'That email is already registered.']);
-            header('Location: /Deployment/2nd-harvest/public/register/' . $role);
+            header('Location: ' . BASE_URL . '/register/' . $role);
             exit;
         }
 
@@ -132,12 +132,12 @@ class AuthController extends BaseController
             $pdo->rollBack();
             Session::set('register_old', $_POST);
             Session::set('register_errors', ['email' => 'Could not create account. Please try again.']);
-            header('Location: /Deployment/2nd-harvest/public/register/' . $role);
+            header('Location: ' . BASE_URL . '/register/' . $role);
             exit;
         }
 
         Session::flash('success', 'Account created! You can now log in.');
-        header('Location: /Deployment/2nd-harvest/public/login');
+        header('Location: ' . BASE_URL . '/login');
         exit;
     }
  
@@ -200,7 +200,7 @@ class AuthController extends BaseController
             Session::set('login_error', 'Please choose a valid role.');
             Session::set('login_old_email', $email);
             Session::set('login_old_role', 'supermarket');
-            header('Location: /Deployment/2nd-harvest/public/login');
+            header('Location: ' . BASE_URL . '/login');
             exit;
         }
         $expectedDbRole = $uiToDbRole[$role];
@@ -209,7 +209,7 @@ class AuthController extends BaseController
             Session::set('login_error', 'Enter your email and password.');
             Session::set('login_old_email', $email);
             Session::set('login_old_role', $role);
-            header('Location: /Deployment/2nd-harvest/public/login');
+            header('Location: ' . BASE_URL . '/login');
             exit;
         }
 
@@ -218,7 +218,7 @@ class AuthController extends BaseController
             Session::set('login_error', 'Incorrect email or password.');
             Session::set('login_old_email', $email);
             Session::set('login_old_role', $role);
-            header('Location: /Deployment/2nd-harvest/public/login');
+            header('Location: ' . BASE_URL . '/login');
             exit;
         }
 
@@ -236,7 +236,7 @@ class AuthController extends BaseController
             );
             Session::set('login_old_email', $email);
             Session::set('login_old_role', $role);
-            header('Location: /Deployment/2nd-harvest/public/login');
+            header('Location: ' . BASE_URL . '/login');
             exit;
         }
 
@@ -254,13 +254,13 @@ class AuthController extends BaseController
         ]);
 
         $destinations = [
-            'employee' => '/Deployment/2nd-harvest/public/employee/dashboard',
-            'charity'  => '/Deployment/2nd-harvest/public/', // TODO: point at the charity dashboard once it's built
-            'consumer' => '/Deployment/2nd-harvest/public/consumer/dashboard',
-            'admin'    => '/Deployment/2nd-harvest/public/', // TODO: point at the admin dashboard once it's built
+            'employee' => BASE_URL . '/employee/dashboard',
+            'charity'  => BASE_URL . '/', // TODO: point at the charity dashboard once it's built
+            'consumer' => BASE_URL . '/consumer/dashboard',
+            'admin'    => BASE_URL . '/', // TODO: point at the admin dashboard once it's built
         ];
  
-        header('Location: ' . ($destinations[$user['role']] ?? '/Deployment/2nd-harvest/public/'));
+        header('Location: ' . ($destinations[$user['role']] ?? BASE_URL . '/'));
         exit;
     }
 
@@ -270,7 +270,7 @@ class AuthController extends BaseController
         Session::forget('user_role');
         Session::forget('user_email');
         Session::forget('user');
-        header('Location: /Deployment/2nd-harvest/public/');
+        header('Location: ' . BASE_URL . '/');
         exit;
     }
 }

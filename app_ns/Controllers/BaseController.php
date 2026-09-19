@@ -24,7 +24,7 @@ abstract class BaseController
     {
         $user = Session::get('user');
         if (!$user) {
-            $this->redirect('/Deployment/2nd-harvest/public/login');
+            $this->redirect(BASE_URL . '/login');
         }
         if (!in_array($user['role'], $allowedRoles, true)) {
             http_response_code(403);

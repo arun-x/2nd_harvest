@@ -64,7 +64,7 @@ $extraStylesheets = ['dashboard.css'];
         before confirming — this marks the pickup as completed in the system.
       </p>
 
-      <form action="/Deployment/2nd-harvest/public/employee/pickups/complete" method="post">
+      <form action="<?= BASE_URL ?>/employee/pickups/complete" method="post">
         <input type="hidden" name="reservation_id" value="<?= htmlspecialchars((string)($pendingPickup['reservation_id'] ?? '')) ?>">
         <button type="submit" class="btn btn-primary btn-lg">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
@@ -72,7 +72,7 @@ $extraStylesheets = ['dashboard.css'];
         </button>
       </form>
 
-      <form action="/Deployment/2nd-harvest/public/employee/pickups/verify/reset" method="post" class="mt-2">
+      <form action="<?= BASE_URL ?>/employee/pickups/verify/reset" method="post" class="mt-2">
         <button type="submit" class="btn btn-ghost btn-sm">Not this pickup? Enter a different token</button>
       </form>
 
@@ -90,7 +90,7 @@ $extraStylesheets = ['dashboard.css'];
         or confirmation email, and enter it below.
       </p>
 
-      <form action="/Deployment/2nd-harvest/public/employee/pickups/verify/token" method="post" style="width: 100%; max-width: 340px;">
+      <form action="<?= BASE_URL ?>/employee/pickups/verify/token" method="post" style="width: 100%; max-width: 340px;">
         <div class="field" style="text-align: left;">
           <input
             class="input" type="text" name="token" id="token"
@@ -135,7 +135,7 @@ $extraStylesheets = ['dashboard.css'];
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           Recent History
         </h2>
-        <a href="/Deployment/2nd-harvest/public/employee/pickups/history" class="text-primary font-semibold" style="font-size: var(--fs-sm);">View All</a>
+        <a href="<?= BASE_URL ?>/employee/pickups/history" class="text-primary font-semibold" style="font-size: var(--fs-sm);">View All</a>
       </div>
 
       <?php if (empty($recentHistory)): ?>

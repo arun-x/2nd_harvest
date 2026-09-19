@@ -27,7 +27,7 @@ $title  = $title  ?? '2nd Harvest';
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
   <?php $cssV = @filemtime(__DIR__ . '/../../../public/assets/css/consumer-style.css') ?: time(); ?>
-  <link rel="stylesheet" href="/Deployment/2nd-harvest/public/assets/css/consumer-style.css?v=<?= $cssV ?>">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/consumer-style.css?v=<?= $cssV ?>">
   <?php $jsV = @filemtime(__DIR__ . '/../../../public/assets/js/consumer.js') ?: time(); ?>
 </head>
 <body>
@@ -44,6 +44,6 @@ $title  = $title  ?? '2nd Harvest';
     </div>
   </div>
 
-  <script src="/Deployment/2nd-harvest/public/assets/js/consumer.js?v=<?= $jsV ?>"></script>
+  <script src="<?= BASE_URL ?>/assets/js/consumer.js?v=<?= $jsV ?>"></script>
 </body>
 </html>

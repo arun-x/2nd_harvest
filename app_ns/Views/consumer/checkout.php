@@ -5,7 +5,7 @@
  * @var array  $errors    Validation errors from POST.
  * @var array  $input     Sticky form input.
  */
-$base = '/Deployment/2nd-harvest/public';
+$base = BASE_URL;
 
 
 // pull CSRF token straight from the session — the layout doesn't hand it in.

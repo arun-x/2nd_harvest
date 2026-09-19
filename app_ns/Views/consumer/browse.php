@@ -5,7 +5,7 @@
  * @var bool $consumerCanBrowse   False before 8:30 PM (charity window still open).
  * @var bool $charityWindowOpen
  */
-$base = '/Deployment/2nd-harvest/public';
+$base = BASE_URL;
 
 /* Small helper: pick the badge class by discount tier. */
 $badgeClass = function (int $pct): string {

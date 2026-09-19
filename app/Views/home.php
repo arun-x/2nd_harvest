@@ -22,14 +22,14 @@ $impactStats = $impactStats ?? [
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>2nd Harvest — Saving Food, Feeding Communities</title>
-  <link rel="stylesheet" href="/Deployment/2nd-harvest/public/assets/css/style.css">
-  <link rel="stylesheet" href="/Deployment/2nd-harvest/public/assets/css/landing.css">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/landing.css">
 </head>
 <body class="landing">
  
   <nav class="public-nav">
-    <a href="/Deployment/2nd-harvest/public/" class="public-nav-logo">
-      <img src="/Deployment/2nd-harvest/public/assets/images/logo.png" alt="2nd Harvest logo">
+    <a href="<?= BASE_URL ?>/" class="public-nav-logo">
+      <img src="<?= BASE_URL ?>/assets/images/logo.png" alt="2nd Harvest logo">
       2nd Harvest
     </a>
  
@@ -40,7 +40,7 @@ $impactStats = $impactStats ?? [
     </div>
  
     <div class="public-nav-right">
-      <a href="/Deployment/2nd-harvest/public/login" class="btn btn-primary btn-sm">Sign in</a>
+      <a href="<?= BASE_URL ?>/login" class="btn btn-primary btn-sm">Sign in</a>
       <button class="icon-btn" type="button" aria-label="Notifications">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       </button>
@@ -63,13 +63,13 @@ $impactStats = $impactStats ?? [
       </p>
  
       <div class="flex gap-3">
-        <a href="/Deployment/2nd-harvest/public/register" class="btn btn-primary btn-lg">Start Rescuing Now</a>
+        <a href="<?= BASE_URL ?>/register" class="btn btn-primary btn-lg">Start Rescuing Now</a>
         <a href="#process" class="btn btn-secondary btn-lg">How It Works</a>
       </div>
     </div>
  
     <div class="hero-image">
-      <img src="/Deployment/2nd-harvest/public/assets/images/hero-crate.jpg" alt="Crate of fresh vegetables">
+      <img src="<?= BASE_URL ?>/assets/images/hero-crate.jpg" alt="Crate of fresh vegetables">
     </div>
   </section>
  
@@ -133,7 +133,7 @@ $impactStats = $impactStats ?? [
           Detailed impact reporting
         </li>
       </ul>
-      <a href="/Deployment/2nd-harvest/public/register/supermarket" class="btn-partner">Register as a retailer</a>
+      <a href="<?= BASE_URL ?>/register/supermarket" class="btn-partner">Register as a retailer</a>
     </div>
  
     <div class="partner-card featured">
@@ -155,7 +155,7 @@ $impactStats = $impactStats ?? [
           Priority window
         </li>
       </ul>
-      <a href="/Deployment/2nd-harvest/public/register/charity" class="btn-partner">Apply as Charity</a>
+      <a href="<?= BASE_URL ?>/register/charity" class="btn-partner">Apply as Charity</a>
     </div>
  
     <div class="partner-card">
@@ -177,7 +177,7 @@ $impactStats = $impactStats ?? [
           Platform-based rescue tracking
         </li>
       </ul>
-      <a href="/Deployment/2nd-harvest/public/register/consumer" class="btn-partner">Register as a customer</a>
+      <a href="<?= BASE_URL ?>/register/consumer" class="btn-partner">Register as a customer</a>
     </div>
   </div>
  
@@ -186,8 +186,8 @@ $impactStats = $impactStats ?? [
       <h2>Ready to make a difference?</h2>
       <p>Join the network today. Registration is completely free!</p>
       <div class="flex gap-3">
-        <a href="/Deployment/2nd-harvest/public/register" class="btn btn-lg btn-cta-primary">Register Now</a>
-        <a href="/Deployment/2nd-harvest/public/contact" class="btn btn-lg btn-cta-secondary">Contact Us</a>
+        <a href="<?= BASE_URL ?>/register" class="btn btn-lg btn-cta-primary">Register Now</a>
+        <a href="<?= BASE_URL ?>/contact" class="btn btn-lg btn-cta-secondary">Contact Us</a>
       </div>
     </div>
   </div>
@@ -213,15 +213,15 @@ $impactStats = $impactStats ?? [
       <div class="public-footer-columns">
         <div class="public-footer-col">
           <h4>Platform</h4>
-          <a href="/Deployment/2nd-harvest/public/about">About Us</a>
-          <a href="/Deployment/2nd-harvest/public/case-studies">Case Studies</a>
-          <a href="/Deployment/2nd-harvest/public/contact">Contact Support</a>
+          <a href="<?= BASE_URL ?>/about">About Us</a>
+          <a href="<?= BASE_URL ?>/case-studies">Case Studies</a>
+          <a href="<?= BASE_URL ?>/contact">Contact Support</a>
         </div>
         <div class="public-footer-col">
           <h4>Legal</h4>
-          <a href="/Deployment/2nd-harvest/public/terms">Terms of Service</a>
-          <a href="/Deployment/2nd-harvest/public/privacy">Privacy Policy</a>
-          <a href="/Deployment/2nd-harvest/public/cookies">Cookie Policy</a>
+          <a href="<?= BASE_URL ?>/terms">Terms of Service</a>
+          <a href="<?= BASE_URL ?>/privacy">Privacy Policy</a>
+          <a href="<?= BASE_URL ?>/cookies">Cookie Policy</a>
         </div>
       </div>
     </div>

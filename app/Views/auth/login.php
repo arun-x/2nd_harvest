@@ -21,14 +21,14 @@ $loginError = $loginError ?? null;
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In — 2nd Harvest</title>
-  <link rel="stylesheet" href="/Deployment/2nd-harvest/public/assets/css/style.css">
-  <link rel="stylesheet" href="/Deployment/2nd-harvest/public/assets/css/auth.css">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/auth.css">
 </head>
 <body>
   <div class="auth-shell">
  
     <div class="auth-brand">
-      <img src="/Deployment/2nd-harvest/public/assets/images/logo.png" alt="2nd Harvest logo" class="auth-brand-logo">
+      <img src="<?= BASE_URL ?>/assets/images/logo.png" alt="2nd Harvest logo" class="auth-brand-logo">
       <h1>2nd Harvest</h1>
       <p>Empowering communities through food rescue.</p>
     </div>
@@ -40,7 +40,7 @@ $loginError = $loginError ?? null;
         </div>
       <?php endif; ?>
  
-      <form action="/Deployment/2nd-harvest/public/login" method="post" novalidate>
+      <form action="<?= BASE_URL ?>/login" method="post" novalidate>
         <div style="text-align:center; font-size: var(--fs-xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: var(--space-3);">
           Select Your Role
         </div>
@@ -82,7 +82,7 @@ $loginError = $loginError ?? null;
         <div class="field">
           <div class="flex justify-between items-center mb-2">
             <label class="field-label" for="password" style="margin-bottom:0;">Password</label>
-            <a href="/Deployment/2nd-harvest/public/forgot-password" class="text-primary font-semibold" style="font-size: var(--fs-sm);">Forgot password?</a>
+            <a href="<?= BASE_URL ?>/forgot-password" class="text-primary font-semibold" style="font-size: var(--fs-sm);">Forgot password?</a>
           </div>
           <div class="input-icon-wrap has-toggle" style="position: relative;">
             <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
@@ -107,7 +107,7 @@ $loginError = $loginError ?? null;
       </form>
     </div>
  
-    <p class="auth-switch">New to the platform? <a href="/Deployment/2nd-harvest/public/register" class="text-primary font-semibold">Register account</a></p>
+    <p class="auth-switch">New to the platform? <a href="<?= BASE_URL ?>/register" class="text-primary font-semibold">Register account</a></p>
  
     <p class="auth-footer-note">
       &copy; <?= date('Y') ?> 2nd Harvest Food Rescue.<br>
@@ -116,7 +116,7 @@ $loginError = $loginError ?? null;
  
   </div>
  
-  <script src="/Deployment/2nd-harvest/public/assets/js/auth.js" defer></script>
+  <script src="<?= BASE_URL ?>/assets/js/auth.js" defer></script>
 </body>
 </html>
  

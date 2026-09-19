@@ -5,7 +5,7 @@
  * @var int    $totalRescued    Sum of collected quantity (items) by user.
  * @var int    $justReservedId  If >0, auto-open the token modal for this order.
  */
-$base = '/Deployment/2nd-harvest/public';
+$base = BASE_URL;
 $justReservedId = $justReservedId ?? 0;
 
 $csrfToken = \App\Core\Session::get('csrf_token');

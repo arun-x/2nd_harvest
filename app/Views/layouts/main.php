@@ -30,10 +30,10 @@ $user = Auth::user() ?? null; // adjust to however app/Core/Auth.php exposes the
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= htmlspecialchars($pageTitle ?? '2nd Harvest') ?> · 2nd Harvest</title>
   <?php $cssV = @filemtime(__DIR__ . '/../../../public/assets/css/style.css') ?: time(); ?>
-  <link rel="stylesheet" href="/Deployment/2nd-harvest/public/assets/css/style.css?v=<?= $cssV ?>">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= $cssV ?>">
   <?php if (!empty($extraStylesheets)): foreach ($extraStylesheets as $sheet):
       $sheetV = @filemtime(__DIR__ . '/../../../public/assets/css/' . $sheet) ?: $cssV; ?>
-    <link rel="stylesheet" href="/Deployment/2nd-harvest/public/assets/css/<?= htmlspecialchars($sheet) ?>?v=<?= $sheetV ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/<?= htmlspecialchars($sheet) ?>?v=<?= $sheetV ?>">
   <?php endforeach; endif; ?>
 </head>
 <body>
@@ -57,7 +57,7 @@ $user = Auth::user() ?? null; // adjust to however app/Core/Auth.php exposes the
         </nav>
 
         <div class="topbar-right">
-          <form class="search-input" action="/Deployment/2nd-harvest/public/employee/dashboard" method="get" role="search">
+          <form class="search-input" action="<?= BASE_URL ?>/employee/dashboard" method="get" role="search">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" name="q" placeholder="Search listings...">
           </form>
@@ -110,9 +110,9 @@ $user = Auth::user() ?? null; // adjust to however app/Core/Auth.php exposes the
     </div>
   </div>
 
-  <script src="/Deployment/2nd-harvest/public/assets/js/validation.js" defer></script>
+  <script src="<?= BASE_URL ?>/assets/js/validation.js" defer></script>
   <?php if (!empty($extraScripts)): foreach ($extraScripts as $script): ?>
-    <script src="/Deployment/2nd-harvest/public/assets/js/<?= htmlspecialchars($script) ?>" defer></script>
+    <script src="<?= BASE_URL ?>/assets/js/<?= htmlspecialchars($script) ?>" defer></script>
   <?php endforeach; endif; ?>
 </body>
 </html>

@@ -17,7 +17,7 @@
 $categories = $categories ?? ['fruits' => 'Fruits', 'vegetables' => 'Vegetables'];
 $old        = $old ?? [];
 $errors     = $errors ?? [];
-$image      = $image    ?? '/Deployment/2nd-harvest/public/assets/images/produce-crate.jpg';
+$image      = $image    ?? BASE_URL . '/assets/images/produce-crate.jpg';
 $imageAlt   = $imageAlt ?? ($old['listing_title'] ?? 'Listing preview');
 
 $pageTitle    = 'Edit Listing';
@@ -26,7 +26,7 @@ $breadcrumbs  = ['Outlet Dashboard', 'Edit Listing'];
 $activeRoute  = 'employee.dashboard';
 $extraScripts = ['create-listing.js'];
 $pageActions = '
-  <a href="/Deployment/2nd-harvest/public/employee/dashboard" class="btn btn-secondary">
+  <a href="<?= BASE_URL ?>/employee/dashboard" class="btn btn-secondary">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     Back
   </a>
@@ -39,7 +39,7 @@ function edit_field_error($errors, $name) {
 }
 ?>
 
-<form class="form-layout" action="/Deployment/2nd-harvest/public/employee/listings/<?= (int) $id ?>" method="post" novalidate>
+<form class="form-layout" action="<?= BASE_URL ?>/employee/listings/<?= (int) $id ?>" method="post" novalidate>
   <div>
     <section class="form-section" style="display:flex; gap: var(--space-4); align-items:center;">
       <img
@@ -136,7 +136,7 @@ function edit_field_error($errors, $name) {
 
     <div class="flex gap-3">
       <button type="submit" class="btn btn-primary btn-lg">Save Changes</button>
-      <a href="/Deployment/2nd-harvest/public/employee/dashboard" class="btn btn-ghost btn-lg">Cancel</a>
+      <a href="<?= BASE_URL ?>/employee/dashboard" class="btn btn-ghost btn-lg">Cancel</a>
     </div>
   </div>
 

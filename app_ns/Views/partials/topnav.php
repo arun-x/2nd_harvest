@@ -1,7 +1,7 @@
 <?php
 /** @var array|null $user */
 /** @var string $crumb */
-$base = '/Deployment/2nd-harvest/public';
+$base = BASE_URL;
 $initial = strtoupper(substr($user['name'] ?? 'C', 0, 1));
 ?>
 <header class="topnav">

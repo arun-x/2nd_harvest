@@ -30,7 +30,7 @@ $breadcrumbs  = ['Outlet Dashboard', 'Create Listing'];
 $activeRoute  = 'employee.listings.create';
 $extraScripts = ['create-listing.js'];
 $pageActions = '
-  <a href="/Deployment/2nd-harvest/public/employee/dashboard" class="btn btn-secondary">
+  <a href="<?= BASE_URL ?>/employee/dashboard" class="btn btn-secondary">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     Back
   </a>
@@ -48,7 +48,7 @@ function field_error($errors, $name) {
   Resupply Network
 </div>
  
-<form class="form-layout" action="/Deployment/2nd-harvest/public/employee/listings" method="post" novalidate>
+<form class="form-layout" action="<?= BASE_URL ?>/employee/listings" method="post" novalidate>
   <div>
     <section class="form-section">
       <h2 class="form-section-title">Basic Information</h2>

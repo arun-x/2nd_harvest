@@ -3,7 +3,7 @@
  * @var array $notifications  Rows: id, message, type, is_read, created_at.
  * @var int   $unreadCount    How many were unread WHEN THE PAGE LOADED.
  */
-$base = '/Deployment/2nd-harvest/public';
+$base = BASE_URL;
 
 // Type -> icon + pill colour. Anything unknown falls back to the generic bell.
 $typeMap = [

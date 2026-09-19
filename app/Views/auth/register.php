@@ -37,8 +37,8 @@ function reg_error($errors, $key) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= $role ? 'Register your ' . ucfirst($role) : 'Create Your Account' ?> — 2nd Harvest</title>
-  <link rel="stylesheet" href="/Deployment/2nd-harvest/public/assets/css/style.css">
-  <link rel="stylesheet" href="/Deployment/2nd-harvest/public/assets/css/auth.css">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/auth.css">
 </head>
 <body>
   <div class="auth-shell">
@@ -47,7 +47,7 @@ function reg_error($errors, $key) {
  
       <!-- ================= Role selection (no role chosen yet) ================= -->
       <div class="auth-brand">
-        <img src="/Deployment/2nd-harvest/public/assets/images/logo.png" alt="2nd Harvest logo" class="auth-brand-logo">
+        <img src="<?= BASE_URL ?>/assets/images/logo.png" alt="2nd Harvest logo" class="auth-brand-logo">
         <h1>2nd Harvest</h1>
         <p>Empowering communities through food rescue.</p>
       </div>
@@ -57,7 +57,7 @@ function reg_error($errors, $key) {
         <p class="auth-card-subtitle">Select your role to begin registration</p>
  
         <div class="role-select-grid">
-          <a href="/Deployment/2nd-harvest/public/register/supermarket" class="role-select-card">
+          <a href="<?= BASE_URL ?>/register/supermarket" class="role-select-card">
             <div class="role-select-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             </div>
@@ -65,7 +65,7 @@ function reg_error($errors, $key) {
             <p>Manage rescue runs, coordinate with businesses, and dispatch food pickups.</p>
           </a>
  
-          <a href="/Deployment/2nd-harvest/public/register/charity" class="role-select-card">
+          <a href="<?= BASE_URL ?>/register/charity" class="role-select-card">
             <div class="role-select-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
             </div>
@@ -73,7 +73,7 @@ function reg_error($errors, $key) {
             <p>Register to receive surplus food donations and distribute them to families in need.</p>
           </a>
  
-          <a href="/Deployment/2nd-harvest/public/register/consumer" class="role-select-card">
+          <a href="<?= BASE_URL ?>/register/consumer" class="role-select-card">
             <div class="role-select-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </div>
@@ -83,7 +83,7 @@ function reg_error($errors, $key) {
         </div>
       </div>
  
-      <p class="auth-switch">Already have an account? <a href="/Deployment/2nd-harvest/public/login" class="text-primary font-semibold">Sign in</a></p>
+      <p class="auth-switch">Already have an account? <a href="<?= BASE_URL ?>/login" class="text-primary font-semibold">Sign in</a></p>
  
       <p class="auth-footer-note">
         &copy; <?= date('Y') ?> 2nd Harvest Food Rescue.<br>
@@ -126,12 +126,12 @@ function reg_error($errors, $key) {
           </p>
  
           <div class="role-tabs">
-            <a href="/Deployment/2nd-harvest/public/register/consumer"   class="role-tab <?= $role === 'consumer'   ? 'active' : '' ?>">Consumer</a>
-            <a href="/Deployment/2nd-harvest/public/register/charity"    class="role-tab <?= $role === 'charity'    ? 'active' : '' ?>">Charity</a>
-            <a href="/Deployment/2nd-harvest/public/register/supermarket" class="role-tab <?= $role === 'supermarket' ? 'active' : '' ?>">Supermarket</a>
+            <a href="<?= BASE_URL ?>/register/consumer"   class="role-tab <?= $role === 'consumer'   ? 'active' : '' ?>">Consumer</a>
+            <a href="<?= BASE_URL ?>/register/charity"    class="role-tab <?= $role === 'charity'    ? 'active' : '' ?>">Charity</a>
+            <a href="<?= BASE_URL ?>/register/supermarket" class="role-tab <?= $role === 'supermarket' ? 'active' : '' ?>">Supermarket</a>
           </div>
  
-          <form action="/Deployment/2nd-harvest/public/register" method="post" novalidate>
+          <form action="<?= BASE_URL ?>/register" method="post" novalidate>
             <input type="hidden" name="role" value="<?= htmlspecialchars($role) ?>">
  
             <?php if ($role === 'supermarket'): ?>
@@ -345,7 +345,7 @@ function reg_error($errors, $key) {
  
             <div class="checkbox-row">
               <input type="checkbox" id="agree" name="agree" value="1" <?= !empty($old['agree']) ? 'checked' : '' ?>>
-              <label for="agree">I agree to the <a href="/Deployment/2nd-harvest/public/terms">Terms of Service</a> and <a href="/Deployment/2nd-harvest/public/privacy">Privacy Policy</a></label>
+              <label for="agree">I agree to the <a href="<?= BASE_URL ?>/terms">Terms of Service</a> and <a href="<?= BASE_URL ?>/privacy">Privacy Policy</a></label>
             </div>
             <?= reg_error($errors, 'agree') ?>
  
@@ -353,7 +353,7 @@ function reg_error($errors, $key) {
               Register <?= $role === 'supermarket' ? 'Supermarket' : ($role === 'charity' ? 'Charity' : '') ?> Account
             </button>
  
-            <p class="auth-switch mt-4">Already have an organization account? <a href="/Deployment/2nd-harvest/public/login" class="text-primary font-semibold">Log In</a></p>
+            <p class="auth-switch mt-4">Already have an organization account? <a href="<?= BASE_URL ?>/login" class="text-primary font-semibold">Log In</a></p>
           </form>
         </div>
       </div>
@@ -362,6 +362,6 @@ function reg_error($errors, $key) {
  
   </div>
  
-  <script src="/Deployment/2nd-harvest/public/assets/js/auth.js" defer></script>
+  <script src="<?= BASE_URL ?>/assets/js/auth.js" defer></script>
 </body>
 </html>

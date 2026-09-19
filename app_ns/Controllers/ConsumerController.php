@@ -29,7 +29,7 @@ class ConsumerController extends BaseController
     public function dashboard(): void
     {
         $this->requireRole('consumer');
-        $this->redirect('/Deployment/2nd-harvest/public/consumer/listings');
+        $this->redirect(BASE_URL . '/consumer/listings');
     }
 
     /* --------------------------------------------------------- */
@@ -100,7 +100,7 @@ class ConsumerController extends BaseController
         if (!$listing || $listing['status'] !== 'available'
             || (float)$listing['quantity_remaining_kg'] <= 0) {
             $this->flash('error', 'That listing is no longer available.');
-            $this->redirect('/Deployment/2nd-harvest/public/consumer/listings');
+            $this->redirect(BASE_URL . '/consumer/listings');
         }
 
         $expiryDate = new \DateTime($listing['expiry_date']);
@@ -142,7 +142,7 @@ class ConsumerController extends BaseController
         $listing = $listingModel->find($id);
         if (!$listing) {
             $this->flash('error', 'Listing not found.');
-            $this->redirect('/Deployment/2nd-harvest/public/consumer/listings');
+            $this->redirect(BASE_URL . '/consumer/listings');
         }
 
         // ---- validate ----
@@ -221,7 +221,7 @@ class ConsumerController extends BaseController
             $this->db()->rollBack();
             error_log($e->getMessage());
             $this->flash('error', 'Could not complete the reservation. Please try again.');
-            $this->redirect('/Deployment/2nd-harvest/public/consumer/listings/' . $id . '/checkout');
+            $this->redirect(BASE_URL . '/consumer/listings/' . $id . '/checkout');
         }
 
         // Notify the outlet employee who posted this listing.
@@ -250,7 +250,7 @@ class ConsumerController extends BaseController
         // for this reservation, so the consumer immediately sees what to
         // present at the outlet. Consumed and cleared inside orders().
         \App\Core\Session::set('just_reserved_id', $resId);
-        $this->redirect('/Deployment/2nd-harvest/public/consumer/orders');
+        $this->redirect(BASE_URL . '/consumer/orders');
     }
 
     /* --------------------------------------------------------- */
@@ -296,11 +296,11 @@ class ConsumerController extends BaseController
         $reservation = $resModel->find($reservationId);
         if (!$reservation || (int)$reservation['user_id'] !== (int)$user['id']) {
             $this->flash('error', 'Reservation not found.');
-            $this->redirect('/Deployment/2nd-harvest/public/consumer/orders');
+            $this->redirect(BASE_URL . '/consumer/orders');
         }
         if ($reservation['status'] !== 'active') {
             $this->flash('error', 'This reservation cannot be confirmed.');
-            $this->redirect('/Deployment/2nd-harvest/public/consumer/orders');
+            $this->redirect(BASE_URL . '/consumer/orders');
         }
 
         $resModel->markCompleted($reservationId, (float)$reservation['reserved_qty_kg']);
@@ -322,7 +322,7 @@ class ConsumerController extends BaseController
         );
 
         $this->flash('success', 'Pickup confirmed. Thank you for rescuing food!');
-        $this->redirect('/Deployment/2nd-harvest/public/consumer/orders');
+        $this->redirect(BASE_URL . '/consumer/orders');
     }
 
     /* --------------------------------------------------------- */
@@ -340,11 +340,11 @@ class ConsumerController extends BaseController
         $reservation = $resModel->find($reservationId);
         if (!$reservation || (int)$reservation['user_id'] !== (int)$user['id']) {
             $this->flash('error', 'Reservation not found.');
-            $this->redirect('/Deployment/2nd-harvest/public/consumer/orders');
+            $this->redirect(BASE_URL . '/consumer/orders');
         }
         if ($reservation['status'] !== 'active') {
             $this->flash('error', 'Only active reservations can be cancelled.');
-            $this->redirect('/Deployment/2nd-harvest/public/consumer/orders');
+            $this->redirect(BASE_URL . '/consumer/orders');
         }
 
         try {
@@ -370,7 +370,7 @@ class ConsumerController extends BaseController
             $this->db()->rollBack();
             error_log($e->getMessage());
             $this->flash('error', 'Could not cancel the reservation.');
-            $this->redirect('/Deployment/2nd-harvest/public/consumer/orders');
+            $this->redirect(BASE_URL . '/consumer/orders');
         }
 
         $listingRow = $listingMdl->find((int)$reservation['listing_id']);
@@ -382,7 +382,7 @@ class ConsumerController extends BaseController
         );
 
         $this->flash('success', 'Reservation cancelled.');
-        $this->redirect('/Deployment/2nd-harvest/public/consumer/orders');
+        $this->redirect(BASE_URL . '/consumer/orders');
     }
 
     /* --------------------------------------------------------- */
@@ -463,7 +463,7 @@ class ConsumerController extends BaseController
         if ($errors) {
             \App\Core\Session::set('profile_form_old', $input);
             \App\Core\Session::set('profile_form_errors', $errors);
-            $this->redirect('/Deployment/2nd-harvest/public/consumer/profile');
+            $this->redirect(BASE_URL . '/consumer/profile');
         }
 
         \User::updateContact((int) $sessionUser['id'], [
@@ -472,7 +472,7 @@ class ConsumerController extends BaseController
         ]);
 
         $this->flash('success', 'Profile updated.');
-        $this->redirect('/Deployment/2nd-harvest/public/consumer/profile');
+        $this->redirect(BASE_URL . '/consumer/profile');
     }
 
     /* --------------------------------------------------------- */
@@ -501,12 +501,12 @@ class ConsumerController extends BaseController
 
         if ($errors) {
             \App\Core\Session::set('password_form_errors', $errors);
-            $this->redirect('/Deployment/2nd-harvest/public/consumer/profile#password');
+            $this->redirect(BASE_URL . '/consumer/profile#password');
         }
 
         \User::updatePassword((int) $sessionUser['id'], password_hash($next, PASSWORD_DEFAULT));
         $this->flash('success', 'Password changed.');
-        $this->redirect('/Deployment/2nd-harvest/public/consumer/profile');
+        $this->redirect(BASE_URL . '/consumer/profile');
     }
 
     /* --------------------------------------------------------- */
@@ -521,7 +521,7 @@ class ConsumerController extends BaseController
     // shows the same picture the employee sees for the same item.
     private function imageFor(string $itemName, string $category): string
     {
-        $base = '/Deployment/2nd-harvest/public/assets/images/';
+        $base = BASE_URL . '/assets/images/';
         $name = strtolower($itemName);
 
         $keywordMap = [

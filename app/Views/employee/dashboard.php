@@ -44,7 +44,7 @@ $categoryOptions = $categoryOptions ?? [];
 $buildFilterUrl = function (array $overrides = []) use ($filters) {
     $params = array_filter(array_merge($filters, $overrides), fn($v) => $v !== '' && $v !== 'name_asc');
     $query = http_build_query($params);
-    return '/Deployment/2nd-harvest/public/employee/dashboard' . ($query ? '?' . $query : '');
+    return BASE_URL . '/employee/dashboard' . ($query ? '?' . $query : '');
 };
  
 // Layout/page chrome — consumed by layouts/main.php
@@ -54,11 +54,11 @@ $breadcrumbs  = ['Outlet', 'Dashboard'];
 $activeRoute  = 'employee.dashboard';
 $extraStylesheets = ['dashboard.css'];
 $pageActions = '
-  <a href="/Deployment/2nd-harvest/public/employee/pickups/verify" class="btn btn-secondary">
+  <a href="<?= BASE_URL ?>/employee/pickups/verify" class="btn btn-secondary">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
     Verify Pickup
   </a>
-  <a href="/Deployment/2nd-harvest/public/employee/listings/create" class="btn btn-primary">
+  <a href="<?= BASE_URL ?>/employee/listings/create" class="btn btn-primary">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Create Listing
   </a>
@@ -142,7 +142,7 @@ $statusBadgeClass = [
         </a>
       </div>
  
-      <form action="/Deployment/2nd-harvest/public/employee/dashboard" method="get" class="flex gap-3 mb-4" style="flex-wrap: wrap; align-items: flex-end;">
+      <form action="<?= BASE_URL ?>/employee/dashboard" method="get" class="flex gap-3 mb-4" style="flex-wrap: wrap; align-items: flex-end;">
         <div class="field" style="margin-bottom:0; flex: 1 1 200px;">
           <label class="field-label" style="font-size: var(--fs-xs);" for="inv_q">Search</label>
           <div class="search-input" style="width: 100%;">
@@ -181,7 +181,7 @@ $statusBadgeClass = [
  
         <button type="submit" class="btn btn-primary">Apply</button>
         <?php if ($filters['q'] || $filters['category'] || $filters['status'] || $filters['sort'] !== 'name_asc'): ?>
-          <a href="/Deployment/2nd-harvest/public/employee/dashboard" class="btn btn-ghost">Clear</a>
+          <a href="<?= BASE_URL ?>/employee/dashboard" class="btn btn-ghost">Clear</a>
         <?php endif; ?>
       </form>
  
@@ -203,7 +203,7 @@ $statusBadgeClass = [
             <tr>
               <td colspan="8" class="text-muted" style="text-align:center; padding: var(--space-8) 0;">
                 <?php if ($filters['q'] || $filters['category'] || $filters['status']): ?>
-                  No listings match your filters. <a href="/Deployment/2nd-harvest/public/employee/dashboard" class="text-primary font-semibold">Clear filters</a>
+                  No listings match your filters. <a href="<?= BASE_URL ?>/employee/dashboard" class="text-primary font-semibold">Clear filters</a>
                 <?php else: ?>
                   No active listings yet.
                 <?php endif; ?>
@@ -234,10 +234,10 @@ $statusBadgeClass = [
                 </td>
                 <td>
                   <div class="flex gap-2" style="align-items:center;">
-                    <a href="/Deployment/2nd-harvest/public/employee/listings/<?= (int) $item['id'] ?>/edit"
+                    <a href="<?= BASE_URL ?>/employee/listings/<?= (int) $item['id'] ?>/edit"
                        class="btn btn-ghost btn-sm">Edit</a>
                     <form method="post"
-                          action="/Deployment/2nd-harvest/public/employee/listings/<?= (int) $item['id'] ?>/delete"
+                          action="<?= BASE_URL ?>/employee/listings/<?= (int) $item['id'] ?>/delete"
                           onsubmit="return confirm('Delete this listing? This cannot be undone.');"
                           style="display:inline;">
                       <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--color-danger-text, #b91c1c);">Delete</button>
@@ -252,12 +252,12 @@ $statusBadgeClass = [
  
       <div class="sync-status">
         <span>Showing <?= count($inventory) ?> of <?= (int) $activeListingsTotal ?> active listings</span>
-        <a href="/Deployment/2nd-harvest/public/employee/listings" class="font-semibold text-primary">View all inventory &rsaquo;</a>
+        <a href="<?= BASE_URL ?>/employee/listings" class="font-semibold text-primary">View all inventory &rsaquo;</a>
       </div>
     </section>
  
     <div class="quick-actions-grid">
-      <a href="/Deployment/2nd-harvest/public/employee/listings/create" class="quick-action-card">
+      <a href="<?= BASE_URL ?>/employee/listings/create" class="quick-action-card">
         <div class="quick-action-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
         </div>
@@ -267,7 +267,7 @@ $statusBadgeClass = [
         </div>
       </a>
  
-      <a href="/Deployment/2nd-harvest/public/employee/pickups/verify" class="quick-action-card">
+      <a href="<?= BASE_URL ?>/employee/pickups/verify" class="quick-action-card">
         <div class="quick-action-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         </div>
@@ -361,7 +361,7 @@ $statusBadgeClass = [
               <?= htmlspecialchars($highlight['quantity_label']) ?>
             </div>
  
-            <a href="/Deployment/2nd-harvest/public/employee/listings/<?= htmlspecialchars($highlight['id']) ?>/reserve" class="btn btn-primary btn-block mt-4">
+            <a href="<?= BASE_URL ?>/employee/listings/<?= htmlspecialchars($highlight['id']) ?>/reserve" class="btn btn-primary btn-block mt-4">
               Reserve Item
             </a>
           </div>

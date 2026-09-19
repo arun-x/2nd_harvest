@@ -22,9 +22,9 @@ $listing = $listing ?? [
   'expires_label'   => '—',
   'pickup_location' => '—',
   'listing_ref'     => 'LST-0000',
-  'image'           => '/Deployment/2nd-harvest/public/assets/images/produce-crate.jpg',
+  'image'           => BASE_URL . '/assets/images/produce-crate.jpg',
 ];
-$listing['image'] = $listing['image'] ?? '/Deployment/2nd-harvest/public/assets/images/produce-crate.jpg';
+$listing['image'] = $listing['image'] ?? BASE_URL . '/assets/images/produce-crate.jpg';
 
 // Layout/page chrome — consumed by layouts/main.php
 $pageTitle    = null; // no page-header banner here — the confirm panel is the header
@@ -44,10 +44,10 @@ $activeRoute  = 'employee.listings.create';
     </p>
 
     <div class="flex gap-3">
-      <a href="/Deployment/2nd-harvest/public/employee/dashboard" class="btn btn-primary btn-lg">
+      <a href="<?= BASE_URL ?>/employee/dashboard" class="btn btn-primary btn-lg">
         Go to Dashboard
       </a>
-      <a href="/Deployment/2nd-harvest/public/employee/listings/create" class="btn btn-secondary btn-lg">
+      <a href="<?= BASE_URL ?>/employee/listings/create" class="btn btn-secondary btn-lg">
         Create Another
       </a>
     </div>
@@ -103,6 +103,6 @@ $activeRoute  = 'employee.listings.create';
   </section>
 
   <div class="flex justify-between mt-4">
-    <a href="/Deployment/2nd-harvest/public/employee/dashboard" class="btn btn-ghost">&larr; Back to Dashboard</a>
+    <a href="<?= BASE_URL ?>/employee/dashboard" class="btn btn-ghost">&larr; Back to Dashboard</a>
   </div>
 </div>

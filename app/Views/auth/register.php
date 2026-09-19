@@ -49,7 +49,6 @@ function reg_error($errors, $key) {
       <div class="auth-brand">
         <img src="<?= BASE_URL ?>/assets/images/logo.png" alt="2nd Harvest logo" class="auth-brand-logo">
         <h1>2nd Harvest</h1>
-        <p>Empowering communities through food rescue.</p>
       </div>
  
       <div class="auth-card">
@@ -84,11 +83,6 @@ function reg_error($errors, $key) {
       </div>
  
       <p class="auth-switch">Already have an account? <a href="<?= BASE_URL ?>/login" class="text-primary font-semibold">Sign in</a></p>
- 
-      <p class="auth-footer-note">
-        &copy; <?= date('Y') ?> 2nd Harvest Food Rescue.<br>
-        Secure platform with 256-bit encryption.
-      </p>
  
     <?php else: ?>
  

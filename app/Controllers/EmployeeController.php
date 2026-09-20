@@ -233,7 +233,7 @@ class EmployeeController extends BaseController
             'reference_price'  => trim($_POST['reference_price'] ?? ''),
             'best_before_date' => date('Y-m-d'),
             'best_before_time' => '22:30',
-            'pickup_location'  => trim($_POST['pickup_location'] ?? ''),
+            'pickup_location'  => '-',
         ];
 
         $errors = $this->validateListing($input);

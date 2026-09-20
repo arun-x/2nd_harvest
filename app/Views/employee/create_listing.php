@@ -116,20 +116,6 @@ function field_error($errors, $name) {
         <?= field_error($errors, 'best_before') ?>
       </div>
  
-      <div class="field">
-        <label class="field-label" for="pickup_location">Specific Pickup Location</label>
-        <div class="input-icon-wrap">
-          <span class="icon">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          </span>
-          <input
-            class="input" type="text" id="pickup_location" name="pickup_location"
-            placeholder="e.g., Loading Dock B, South Entrance"
-            value="<?= htmlspecialchars($old['pickup_location'] ?? '') ?>"
-          >
-        </div>
-        <?= field_error($errors, 'pickup_location') ?>
-      </div>
     </section>
  
     <div class="flex gap-3">
@@ -149,4 +135,3 @@ function field_error($errors, $name) {
     </ul>
   </aside>
 </form>
- 

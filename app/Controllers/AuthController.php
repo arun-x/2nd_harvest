@@ -183,6 +183,16 @@ class AuthController extends BaseController
  
         require __DIR__ . '/../Views/auth/login.php';
     }
+
+    public function terms(): void
+    {
+        require __DIR__ . '/../Views/auth/terms.php';
+    }
+
+    public function privacy(): void
+    {
+        require __DIR__ . '/../Views/auth/privacy.php';
+    }
  
     public function authenticate(): void
     {

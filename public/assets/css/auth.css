@@ -72,6 +72,47 @@
   font-size: var(--fs-xs);
   line-height: 1.6;
 }
+
+.auth-legal-link {
+  text-align: center;
+  font-size: var(--fs-sm);
+}
+
+.auth-legal-link a {
+  color: var(--color-primary-dark);
+  font-weight: 600;
+}
+
+.terms-card {
+  max-width: 780px;
+}
+
+.terms-card h2 {
+  font-size: var(--fs-xl);
+  margin: var(--space-6) 0 var(--space-2);
+}
+
+.terms-card h2:first-of-type {
+  margin-top: 0;
+}
+
+.terms-card p,
+.terms-card li {
+  color: var(--color-text-secondary);
+  font-size: var(--fs-base);
+  line-height: 1.7;
+}
+
+.terms-card ul {
+  list-style: disc;
+  margin: 0 0 var(--space-4) var(--space-6);
+}
+
+.terms-card .terms-updated {
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+  margin-bottom: var(--space-6);
+}
  
 /* --------------------------------------------------------------------------
    Role-select cards (register landing — image 1)

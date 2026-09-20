@@ -108,6 +108,8 @@ $loginError = $loginError ?? null;
     </div>
  
     <p class="auth-switch">New to the platform? <a href="<?= BASE_URL ?>/register" class="text-primary font-semibold">Register account</a></p>
+
+    <p class="auth-legal-link"><a href="<?= BASE_URL ?>/terms">Terms of Service</a> <span aria-hidden="true">|</span> <a href="<?= BASE_URL ?>/privacy">Privacy Policy</a></p>
  
     <p class="auth-footer-note">
       &copy; <?= date('Y') ?> 2nd Harvest Food Rescue.<br>

@@ -59,6 +59,8 @@ $router->get ('/register/charity',      [AuthController::class, 'registerCharity
 $router->get ('/register/consumer',     [AuthController::class, 'registerConsumer']);
 $router->post('/register',              [AuthController::class, 'store']);
 $router->get ('/login',                 [AuthController::class, 'login']);
+$router->get ('/terms',                 [AuthController::class, 'terms']);
+$router->get ('/privacy',               [AuthController::class, 'privacy']);
 $router->post('/login',                 [AuthController::class, 'authenticate']);
 $router->post('/logout',                [AuthController::class, 'logout']);
 

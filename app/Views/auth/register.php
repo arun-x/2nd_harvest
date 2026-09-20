@@ -83,6 +83,7 @@ function reg_error($errors, $key) {
       </div>
  
       <p class="auth-switch">Already have an account? <a href="<?= BASE_URL ?>/login" class="text-primary font-semibold">Sign in</a></p>
+      <p class="auth-legal-link"><a href="<?= BASE_URL ?>/terms">Terms of Service</a> <span aria-hidden="true">|</span> <a href="<?= BASE_URL ?>/privacy">Privacy Policy</a></p>
  
     <?php else: ?>
  

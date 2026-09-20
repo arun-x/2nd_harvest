@@ -336,38 +336,6 @@ $statusBadgeClass = [
       </section>
     <?php endif; ?>
  
-    <?php if ($highlight): ?>
-      <section>
-        <h3 style="font-size: var(--fs-lg); margin-bottom: var(--space-3);">Active Highlights</h3>
-        <div class="listing-card">
-          <div class="listing-image">
-            <img src="<?= htmlspecialchars($highlight['image']) ?>" alt="">
-            <span class="availability-ribbon"><?= htmlspecialchars($highlight['badge'] ?? 'Available') ?></span>
-          </div>
-          <div class="listing-body">
-            <div class="listing-title"><?= htmlspecialchars($highlight['title']) ?></div>
-            <div class="listing-category"><?= htmlspecialchars($highlight['category']) ?></div>
- 
-            <div class="listing-meta-row">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <?= htmlspecialchars($highlight['location']) ?>
-            </div>
-            <div class="listing-meta-row">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              Expires: <?= htmlspecialchars($highlight['expires']) ?>
-            </div>
-            <div class="listing-meta-row">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-              <?= htmlspecialchars($highlight['quantity_label']) ?>
-            </div>
- 
-            <a href="<?= BASE_URL ?>/employee/listings/<?= htmlspecialchars($highlight['id']) ?>/reserve" class="btn btn-primary btn-block mt-4">
-              Reserve Item
-            </a>
-          </div>
-        </div>
-      </section>
-    <?php endif; ?>
+    
   </div>
 </div>
- 

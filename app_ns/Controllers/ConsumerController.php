@@ -47,7 +47,20 @@ class ConsumerController extends BaseController
             $category = 'all';
         }
 
+        // Location filter: set once the customer picks an address from
+        // the Places Autocomplete field (see browse.php + location-filter.js,
+        // which fill these as hidden lat/lng inputs on the filter form).
+        $address = trim($_GET['address'] ?? '');
+        $lat     = isset($_GET['lat']) && $_GET['lat'] !== '' ? (float) $_GET['lat'] : null;
+        $lng     = isset($_GET['lng']) && $_GET['lng'] !== '' ? (float) $_GET['lng'] : null;
+        $radiusKm = 30;
+
+        $selectedOutletId = isset($_GET['outlet_id']) && $_GET['outlet_id'] !== ''
+            ? (int) $_GET['outlet_id']
+            : null;
+
         $listingModel = new Listing();
+        $outletModel  = new \App\Models\Outlet();
         $priority     = new PriorityWindowService();
         $discount     = new DiscountEngine();
 
@@ -57,8 +70,27 @@ class ConsumerController extends BaseController
         $windowOpen        = $priority->isCharityWindowOpen();
         $consumerCanBrowse = $priority->isConsumerWindowOpen();
 
+        $nearbyOutlets = [];
+        $outletIds     = null; // null = no location filter applied yet
+
+        if ($lat !== null && $lng !== null) {
+            $nearbyOutlets = $outletModel->findNearby($lat, $lng, $radiusKm);
+            $nearbyIds     = array_column($nearbyOutlets, 'id');
+
+            // A specific branch was picked from the dropdown — only honour
+            // it if that branch is actually within the radius, otherwise
+            // fall back to "all nearby outlets" rather than silently
+            // showing an out-of-range branch's stock.
+            if ($selectedOutletId !== null && in_array($selectedOutletId, $nearbyIds, true)) {
+                $outletIds = [$selectedOutletId];
+            } else {
+                $selectedOutletId = null;
+                $outletIds        = $nearbyIds;
+            }
+        }
+
         $rawListings = $consumerCanBrowse
-            ? $listingModel->findUnclaimedForConsumers($category)
+            ? $listingModel->findUnclaimedForConsumers($category, $outletIds)
             : [];
 
         // Decorate each listing with the computed discount tier so
@@ -82,6 +114,12 @@ class ConsumerController extends BaseController
             'selectedCategory'   => $category,
             'consumerCanBrowse'  => $consumerCanBrowse,
             'charityWindowOpen'  => $windowOpen,
+            'address'            => $address,
+            'lat'                => $lat,
+            'lng'                => $lng,
+            'radiusKm'           => $radiusKm,
+            'nearbyOutlets'      => $nearbyOutlets,
+            'selectedOutletId'   => $selectedOutletId,
         ]);
     }
 

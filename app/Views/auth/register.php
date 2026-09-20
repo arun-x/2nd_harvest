@@ -190,7 +190,7 @@ function reg_error($errors, $key) {
                   <label class="field-label" for="address">Location / Store Address</label>
                   <div class="input-icon-wrap">
                     <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
-                    <input class="input" type="text" id="address" name="address" placeholder="10/2 Galle Road, Col 4" value="<?= reg_val($old, 'address') ?>">
+                    <input class="input" type="text" id="address" name="address" placeholder="10/2 Galle Road, Col 4" value="<?= reg_val($old, 'address') ?>" data-address-autocomplete autocomplete="off">
                   </div>
                   <?= reg_error($errors, 'address') ?>
                 </div>
@@ -273,7 +273,7 @@ function reg_error($errors, $key) {
                   <label class="field-label" for="service_area">Location / Service Area</label>
                   <div class="input-icon-wrap">
                     <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
-                    <input class="input" type="text" id="service_area" name="service_area" placeholder="9/29 Kynsey road" value="<?= reg_val($old, 'service_area') ?>">
+                    <input class="input" type="text" id="service_area" name="service_area" placeholder="9/29 Kynsey road" value="<?= reg_val($old, 'service_area') ?>" data-address-autocomplete autocomplete="off">
                   </div>
                   <?= reg_error($errors, 'service_area') ?>
                 </div>
@@ -317,7 +317,7 @@ function reg_error($errors, $key) {
                 <label class="field-label" for="location">Location / Store Address</label>
                 <div class="input-icon-wrap">
                   <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
-                  <input class="input" type="text" id="location" name="location" placeholder="Bambalapitiya" value="<?= reg_val($old, 'location') ?>">
+                  <input class="input" type="text" id="location" name="location" placeholder="Bambalapitiya" value="<?= reg_val($old, 'location') ?>" data-address-autocomplete autocomplete="off">
                 </div>
                 <?= reg_error($errors, 'location') ?>
               </div>
@@ -343,6 +343,7 @@ function reg_error($errors, $key) {
  
   </div>
  
+  <script src="<?= BASE_URL ?>/assets/js/address-autocomplete.js" defer></script>
   <script src="<?= BASE_URL ?>/assets/js/auth.js" defer></script>
 </body>
 </html>

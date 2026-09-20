@@ -89,25 +89,12 @@ function reg_error($errors, $key) {
       <!-- ================= Role-specific registration form ================= -->
       <div class="register-shell">
         <div class="register-panel-left">
-          <div>
+          <img class="register-panel-bg" src="<?= htmlspecialchars($panel['image']) ?>" alt="">
+          <div class="register-panel-overlay"></div>
+
+          <div class="register-panel-copy">
             <h2><?= htmlspecialchars($panel['heading']) ?></h2>
             <p><?= htmlspecialchars($panel['desc']) ?></p>
- 
-            <?php foreach ($panel['benefits'] as $benefit): ?>
-              <div class="register-benefit">
-                <div class="register-benefit-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 4 13v-1a7 7 0 0 1 7-7h1a7 7 0 0 1 7 7v1a7 7 0 0 1-7 7h-1z"/></svg>
-                </div>
-                <div>
-                  <strong><?= htmlspecialchars($benefit['title']) ?></strong>
-                  <span><?= htmlspecialchars($benefit['desc']) ?></span>
-                </div>
-              </div>
-            <?php endforeach; ?>
-          </div>
- 
-          <div class="register-panel-image">
-            <img src="<?= htmlspecialchars($panel['image']) ?>" alt="">
           </div>
         </div>
  

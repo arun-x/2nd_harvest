@@ -10,7 +10,12 @@ class Listing extends BaseModel
      * Restricted to today's listings only — anything with an earlier
      * expiry date is considered expired and hidden from the marketplace.
      */
-    public function findUnclaimedForConsumers(string $category = 'all'): array
+    /**
+     * @param array<int>|null $outletIds  Restrict to these outlet IDs
+     *   (e.g. outlets within the customer's 30km radius, or a single
+     *   branch they picked from the filter). Null = no restriction.
+     */
+    public function findUnclaimedForConsumers(string $category = 'all', ?array $outletIds = null): array
     {
         $sql = "SELECT l.*, o.outlet_name, o.branch_location, o.region
                 FROM listings l
@@ -24,6 +29,22 @@ class Listing extends BaseModel
             $sql .= " AND l.category = :cat";
             $params['cat'] = $category;
         }
+
+        if ($outletIds !== null) {
+            if (empty($outletIds)) {
+                // A location filter is active but matched zero outlets —
+                // short-circuit rather than run a query with an empty IN().
+                return [];
+            }
+            $placeholders = [];
+            foreach (array_values($outletIds) as $i => $id) {
+                $key = "outlet{$i}";
+                $placeholders[] = ":{$key}";
+                $params[$key] = $id;
+            }
+            $sql .= " AND l.outlet_id IN (" . implode(', ', $placeholders) . ")";
+        }
+
         $sql .= " ORDER BY l.created_at DESC";
 
         $stmt = $this->db->prepare($sql);

@@ -4,8 +4,15 @@
  * @var string $selectedCategory  'all' | 'fruit' | 'vegetable'
  * @var bool $consumerCanBrowse   False before 8:30 PM (charity window still open).
  * @var bool $charityWindowOpen
+ * @var string $address           Free-text address the customer typed, '' if none set.
+ * @var float|null $lat
+ * @var float|null $lng
+ * @var int $radiusKm             Fixed at 30.
+ * @var array $nearbyOutlets      Outlets within $radiusKm of ($lat, $lng), nearest first. Empty until a location is set.
+ * @var int|null $selectedOutletId  The branch picked from the dropdown, if any.
  */
 $base = BASE_URL;
+$locationSet = $lat !== null && $lng !== null;
 
 /* Small helper: pick the badge class by discount tier. */
 $badgeClass = function (int $pct): string {
@@ -47,10 +54,47 @@ $expiryLabel = function (string $ymd): string {
   </button>
 </div>
 
+<form id="location-filter-form" class="filter-row" method="get" action="<?= $base ?>/consumer/listings">
+  <input type="hidden" name="category" value="<?= htmlspecialchars($selectedCategory) ?>">
+
+  <div class="filter-search" style="flex: 2; position: relative;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+    <input
+      type="text"
+      id="location-input"
+      name="address"
+      placeholder="Enter your address to find nearby outlets..."
+      autocomplete="off"
+      value="<?= htmlspecialchars($address) ?>"
+    >
+    <!-- Populated by location-filter.js with Nominatim address suggestions. -->
+    <ul id="location-suggestions" class="location-suggestions" hidden></ul>
+  </div>
+  <input type="hidden" name="lat" id="location-lat" value="<?= $lat !== null ? htmlspecialchars((string)$lat) : '' ?>">
+  <input type="hidden" name="lng" id="location-lng" value="<?= $lng !== null ? htmlspecialchars((string)$lng) : '' ?>">
+
+  <?php if ($locationSet): ?>
+    <select name="outlet_id" class="filter-btn" onchange="this.form.submit()">
+      <option value="">All nearby branches (<?= count($nearbyOutlets) ?>)</option>
+      <?php foreach ($nearbyOutlets as $outlet): ?>
+        <option value="<?= (int)$outlet['id'] ?>" <?= $selectedOutletId === (int)$outlet['id'] ? 'selected' : '' ?>>
+          <?= htmlspecialchars($outlet['outlet_name']) ?> — <?= number_format((float)$outlet['distance_km'], 1) ?>km
+        </option>
+      <?php endforeach; ?>
+    </select>
+
+    <a href="<?= $base ?>/consumer/listings?category=<?= htmlspecialchars($selectedCategory) ?>" class="filter-btn">
+      Clear location
+    </a>
+  <?php else: ?>
+    <button type="submit" class="filter-btn">Apply</button>
+  <?php endif; ?>
+</form>
+
 <nav class="category-tabs" aria-label="Category filter">
-  <a href="?category=all"        class="<?= $selectedCategory === 'all'        ? 'is-active' : '' ?>">All</a>
-  <a href="?category=fruit"      class="<?= $selectedCategory === 'fruit'      ? 'is-active' : '' ?>">Fruits</a>
-  <a href="?category=vegetable"  class="<?= $selectedCategory === 'vegetable'  ? 'is-active' : '' ?>">Vegetables</a>
+  <a href="?category=all<?= $locationSet ? '&address=' . urlencode($address) . '&lat=' . $lat . '&lng=' . $lng : '' ?>"        class="<?= $selectedCategory === 'all'        ? 'is-active' : '' ?>">All</a>
+  <a href="?category=fruit<?= $locationSet ? '&address=' . urlencode($address) . '&lat=' . $lat . '&lng=' . $lng : '' ?>"      class="<?= $selectedCategory === 'fruit'      ? 'is-active' : '' ?>">Fruits</a>
+  <a href="?category=vegetable<?= $locationSet ? '&address=' . urlencode($address) . '&lat=' . $lat . '&lng=' . $lng : '' ?>"  class="<?= $selectedCategory === 'vegetable'  ? 'is-active' : '' ?>">Vegetables</a>
 </nav>
 
 <div class="info-banner">
@@ -67,7 +111,15 @@ $expiryLabel = function (string $ymd): string {
   <h2>Available Listings</h2>
   <span class="location-note">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
-    Showing results within 30km of <strong>your location</strong>
+    <?php if ($locationSet && $selectedOutletId !== null): ?>
+      <?php $chosen = array_values(array_filter($nearbyOutlets, fn($o) => (int)$o['id'] === $selectedOutletId))[0] ?? null; ?>
+      Showing results from <strong><?= htmlspecialchars($chosen['outlet_name'] ?? 'selected branch') ?></strong> only
+    <?php elseif ($locationSet): ?>
+      Showing results within <?= (int)$radiusKm ?>km of <strong><?= htmlspecialchars($address) ?></strong>
+      (<?= count($nearbyOutlets) ?> outlet<?= count($nearbyOutlets) === 1 ? '' : 's' ?> nearby)
+    <?php else: ?>
+      Enter your address above to see outlets within <?= (int)$radiusKm ?>km of you
+    <?php endif; ?>
   </span>
 </section>
 
@@ -75,6 +127,11 @@ $expiryLabel = function (string $ymd): string {
   <div class="empty-state">
     <h3>The consumer window opens at 8:30 PM</h3>
     <p>Between 7:00 PM and 8:30 PM registered charities have first pick on today's surplus. Come back a little later — anything unclaimed will appear here at a discount.</p>
+  </div>
+<?php elseif ($locationSet && empty($nearbyOutlets)): ?>
+  <div class="empty-state">
+    <h3>No outlets within <?= (int)$radiusKm ?>km</h3>
+    <p>There's no partner outlet near <strong><?= htmlspecialchars($address) ?></strong> yet. Try a different address, or clear the location filter to see everything.</p>
   </div>
 <?php elseif (empty($listings)): ?>
   <div class="empty-state">
@@ -145,3 +202,5 @@ $expiryLabel = function (string $ymd): string {
     <?php endforeach; ?>
   </div>
 <?php endif; ?>
+
+<script src="<?= $base ?>/assets/js/location-filter.js" defer></script>

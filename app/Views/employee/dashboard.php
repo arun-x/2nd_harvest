@@ -49,7 +49,7 @@ $buildFilterUrl = function (array $overrides = []) use ($filters) {
  
 // Layout/page chrome — consumed by layouts/main.php
 $pageTitle    = 'Outlet Performance';
-
+$pageSubtitle = 'Overview of current surplus listings and food rescue impact at your location.';
 $breadcrumbs  = ['Outlet', 'Dashboard'];
 $activeRoute  = 'employee.dashboard';
 $extraStylesheets = ['dashboard.css'];
@@ -130,6 +130,7 @@ $statusBadgeClass = [
       <div class="card-header">
         <div>
           <h2 class="card-title">Inventory Management</h2>
+          <p class="card-subtitle">Monitor and manage your active food surplus listings.</p>
         </div>
         <a
           href="<?= htmlspecialchars($buildFilterUrl(['status' => $filters['status'] === 'expired' ? '' : 'expired'])) ?>"
@@ -249,7 +250,7 @@ $statusBadgeClass = [
         </tbody>
       </table>
  
-     
+      
     </section>
   </div>
 
@@ -268,7 +269,7 @@ $statusBadgeClass = [
 
       <?php if (empty($alerts)): ?>
         <div class="text-muted" style="text-align:center; padding: var(--space-8) 0;">
-          No urgent alerts.
+          No alerts right now — nothing urgent needs your attention.
         </div>
       <?php else: ?>
         <?php foreach ($alerts as $alert): ?>
@@ -289,6 +290,7 @@ $statusBadgeClass = [
       <div class="card-header">
         <div>
           <h2 class="card-title">Community Impact</h2>
+          <p class="card-subtitle">Real-time sustainability metrics for 2nd Harvest.</p>
         </div>
       </div>
       <div class="card-grid-2">

@@ -31,6 +31,22 @@ class Pickup extends BaseModel
         return (float) $stmt->fetchColumn();
     }
 
+    // All-time total actually collected/picked up for this outlet — used for
+    // the "Total Rescued" dashboard stat, as distinct from quantity_kg listed
+    // (which includes stock that was never claimed).
+    public static function sumKgForOutlet(int $outletId): float
+    {
+        $stmt = self::db()->prepare(
+            'SELECT COALESCE(SUM(p.collected_qty_kg), 0)
+             FROM pickups p
+             JOIN reservations r ON r.id = p.reservation_id
+             JOIN listings l     ON l.id = r.listing_id
+             WHERE l.outlet_id = :oid'
+        );
+        $stmt->execute([':oid' => $outletId]);
+        return (float) $stmt->fetchColumn();
+    }
+
     public static function create(int $reservationId, float $collectedKg, int $confirmedByUserId): int
     {
         $stmt = self::db()->prepare(

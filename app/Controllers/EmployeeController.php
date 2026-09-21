@@ -46,11 +46,16 @@ class EmployeeController extends BaseController
 
         $activeCount  = count(array_filter($allInventory, fn($i) => $i['status'] === 'active'));
         $expiredCount = count(array_filter($allInventory, fn($i) => $i['status'] === 'expired'));
-        $totalKg = array_sum(array_map(fn($r) => (float) $r['quantity_kg'], $rows));
+
+        // "Total Rescued" = actual collected/picked-up quantity (from the
+        // pickups table, recorded when a charity/consumer confirms pickup),
+        // NOT the total quantity ever listed — most of what's listed may
+        // never get claimed, so that would overstate real impact.
+        $totalRescuedKg = $outlet ? Pickup::sumKgForOutlet((int) $outlet['id']) : 0.0;
 
         $stats = [
             'active_listings' => $activeCount,
-            'total_rescued'   => number_format($totalKg, 1) . ' kg',
+            'total_rescued'   => number_format($totalRescuedKg, 1) . ' kg',
             'expiring_soon'   => $expiredCount,
             'collection_rate' => count($allInventory) > 0 ? '—' : '0%',
         ];

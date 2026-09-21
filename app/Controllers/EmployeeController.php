@@ -21,13 +21,13 @@ class EmployeeController extends BaseController
         // today's listing → active, any older listing → expired. Reserved /
         // expiring badges no longer apply.
         $today = date('Y-m-d');
-        $allInventory = array_map(function ($r) use ($today) {
+        $fmtKg = fn(float $n): string => rtrim(rtrim(number_format($n, 1, '.', ''), '0'), '.');
+        $allInventory = array_map(function ($r) use ($today, $fmtKg) {
             $viewStatus = ($r['expiry_date'] === $today) ? 'active' : 'expired';
 
             $totalKg      = (float) $r['quantity_kg'];
             $remainingKg  = (float) ($r['quantity_remaining_kg'] ?? $r['quantity_kg']);
             $reservedKg   = max(0.0, $totalKg - $remainingKg);
-            $fmt = fn(float $n): string => rtrim(rtrim(number_format($n, 1, '.', ''), '0'), '.');
 
             return [
                 'id'           => (int) $r['id'],
@@ -35,7 +35,7 @@ class EmployeeController extends BaseController
                 'name'         => $r['item_name'],
                 'category'     => ucfirst($r['category']) . 's',
                 'sku'          => 'LST-' . str_pad((string) $r['id'], 4, '0', STR_PAD_LEFT),
-                'quantity'     => $fmt($remainingKg) . ' / ' . $fmt($totalKg) . ' kg',
+                'quantity'     => $fmtKg($remainingKg) . ' / ' . $fmtKg($totalKg) . ' kg',
                 'reserved_kg'  => $reservedKg,
                 'remaining_kg' => $remainingKg,
                 'total_kg'     => $totalKg,
@@ -105,22 +105,41 @@ class EmployeeController extends BaseController
             'charities_served'  => 12,
         ];
  
-        $alerts = [
-            [
-                'type' => 'danger',
-                'title' => 'Expired: Sweet Bell Peppers',
-                'meta' => 'SKU VEG-BEL-005 · 5 units',
-                'action_label' => 'Clear Listing',
-                'action_href' => BASE_URL . '/employee/listings/5',
-            ],
-            [
-                'type' => 'warning',
-                'title' => 'Expiring Today: Ripe Bananas',
-                'meta' => '20 units remaining · Donate now',
-                'action_label' => 'Push to Charity',
-                'action_href' => BASE_URL . '/employee/listings/2/push',
-            ],
-        ];
+        // Critical Alerts — derived from real inventory, not sample data:
+        //   - every expired listing still sitting in the system (needs clearing)
+        //   - every active listing expiring today that's still mostly unclaimed
+        //     (real risk of being wasted once the day ends)
+        // Built from $allInventory (not the filtered/searched $inventory) so
+        // the alerts panel always reflects the outlet's full state regardless
+        // of whatever the employee currently has typed into the search box.
+        $alerts = [];
+        foreach ($allInventory as $item) {
+            if ($item['status'] === 'expired') {
+                $alerts[] = [
+                    'type'         => 'danger',
+                    'title'        => 'Expired: ' . $item['name'],
+                    'meta'         => 'SKU ' . $item['sku'] . ' · ' . $item['quantity'],
+                    'action_label' => 'Manage Listing',
+                    'action_href'  => BASE_URL . '/employee/listings/' . $item['id'] . '/edit',
+                ];
+            } elseif (
+                $item['status'] === 'active'
+                && $item['total_kg'] > 0
+                && ($item['remaining_kg'] / $item['total_kg']) >= 0.5
+            ) {
+                $alerts[] = [
+                    'type'         => 'warning',
+                    'title'        => 'Expiring Today: ' . $item['name'],
+                    'meta'         => $fmtKg($item['remaining_kg']) . ' kg still unclaimed',
+                    'action_label' => 'View Listing',
+                    'action_href'  => BASE_URL . '/employee/listings/' . $item['id'] . '/edit',
+                ];
+            }
+        }
+        // Expired items are the most urgent — surface those first, then cap
+        // the panel to a manageable number rather than flooding the dashboard.
+        usort($alerts, fn($a, $b) => ($a['type'] === 'danger' ? 0 : 1) <=> ($b['type'] === 'danger' ? 0 : 1));
+        $alerts = array_slice($alerts, 0, 6);
  
         $highlight = [
             'id' => 6,

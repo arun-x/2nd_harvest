@@ -116,7 +116,7 @@ $orderCode = fn(int $id): string => 'ORD-' . str_pad((string)$id, 5, '0', STR_PA
                 <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">
                   <?= htmlspecialchars(ucfirst($order['category'])) ?>
                   · <?= (int)$order['discount_pct'] ?>% discount
-                  · LKR <?= number_format((float)$order['price_paid'], 2) ?> paid
+                  · LKR <?= number_format((float)$order['price_paid'], 2) ?>
                 </div>
               </div>
             </div>

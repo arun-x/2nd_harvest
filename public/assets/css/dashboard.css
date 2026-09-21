@@ -18,53 +18,6 @@
   gap: var(--space-5);
 }
 
-/* Quick action tiles ("Quick Add", "Verify Reservation") */
-.quick-actions-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-5);
-}
-
-.quick-action-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  display: flex;
-  gap: var(--space-4);
-  align-items: flex-start;
-  cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.quick-action-card:hover {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-sm);
-}
-
-.quick-action-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
-  background: var(--color-primary-light);
-  color: var(--color-primary-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.quick-action-title {
-  font-weight: 700;
-  font-size: var(--fs-base);
-  margin-bottom: 2px;
-}
-
-.quick-action-desc {
-  font-size: var(--fs-sm);
-  color: var(--color-text-secondary);
-}
-
 /* Sync status bar at the foot of a dashboard card/table */
 .sync-status {
   display: flex;
@@ -105,8 +58,7 @@
    overrides needed there. */
 
 @media (max-width: 1100px) {
-  .dashboard-grid,
-  .quick-actions-grid {
+  .dashboard-grid {
     grid-template-columns: 1fr;
   }
 }

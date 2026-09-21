@@ -49,7 +49,7 @@ $buildFilterUrl = function (array $overrides = []) use ($filters) {
  
 // Layout/page chrome — consumed by layouts/main.php
 $pageTitle    = 'Outlet Performance';
-$pageSubtitle = 'Overview of current surplus listings and food rescue impact at your location.';
+
 $breadcrumbs  = ['Outlet', 'Dashboard'];
 $activeRoute  = 'employee.dashboard';
 $extraStylesheets = ['dashboard.css'];
@@ -130,7 +130,6 @@ $statusBadgeClass = [
       <div class="card-header">
         <div>
           <h2 class="card-title">Inventory Management</h2>
-          <p class="card-subtitle">Monitor and manage your active food surplus listings.</p>
         </div>
         <a
           href="<?= htmlspecialchars($buildFilterUrl(['status' => $filters['status'] === 'expired' ? '' : 'expired'])) ?>"
@@ -250,42 +249,46 @@ $statusBadgeClass = [
         </tbody>
       </table>
  
-      <div class="sync-status">
-        <span>Showing <?= count($inventory) ?> of <?= (int) $activeListingsTotal ?> active listings</span>
-        <a href="<?= BASE_URL ?>/employee/listings" class="font-semibold text-primary">View all inventory &rsaquo;</a>
-      </div>
+     
     </section>
- 
-    <div class="quick-actions-grid">
-      <a href="<?= BASE_URL ?>/employee/listings/create" class="quick-action-card">
-        <div class="quick-action-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-        </div>
-        <div>
-          <div class="quick-action-title">Quick Add</div>
-          <div class="quick-action-desc">List surplus items from daily inventory check.</div>
-        </div>
-      </a>
- 
-      <a href="<?= BASE_URL ?>/employee/pickups/verify" class="quick-action-card">
-        <div class="quick-action-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        </div>
-        <div>
-          <div class="quick-action-title">Verify Reservation</div>
-          <div class="quick-action-desc">Scan QR codes for charity or consumer pickups.</div>
-        </div>
-      </a>
-    </div>
   </div>
- 
+
   <!-- Right column -->
   <div class="dashboard-col">
     <section class="card">
       <div class="card-header">
         <div>
+          <h2 class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Critical Alerts
+          </h2>
+          <p class="card-subtitle">Items requiring immediate attention before expiration.</p>
+        </div>
+      </div>
+
+      <?php if (empty($alerts)): ?>
+        <div class="text-muted" style="text-align:center; padding: var(--space-8) 0;">
+          No urgent alerts.
+        </div>
+      <?php else: ?>
+        <?php foreach ($alerts as $alert): ?>
+          <div class="alert-item <?= htmlspecialchars($alert['type']) ?>">
+            <div class="alert-item-title"><?= htmlspecialchars($alert['title']) ?></div>
+            <div class="alert-item-meta"><?= htmlspecialchars($alert['meta']) ?></div>
+            <?php if (!empty($alert['action_label'])): ?>
+              <a href="<?= htmlspecialchars($alert['action_href'] ?? '#') ?>" class="alert-item-action">
+                <?= htmlspecialchars($alert['action_label']) ?>
+              </a>
+            <?php endif; ?>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <div>
           <h2 class="card-title">Community Impact</h2>
-          <p class="card-subtitle">Real-time sustainability metrics for 2nd Harvest.</p>
         </div>
       </div>
       <div class="card-grid-2">
@@ -309,33 +312,5 @@ $statusBadgeClass = [
         </div>
       </div>
     </section>
- 
-    <?php if (!empty($alerts)): ?>
-      <section class="card">
-        <div class="card-header">
-          <div>
-            <h2 class="card-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              Critical Alerts
-            </h2>
-            <p class="card-subtitle">Items requiring immediate attention before expiration.</p>
-          </div>
-        </div>
- 
-        <?php foreach ($alerts as $alert): ?>
-          <div class="alert-item <?= htmlspecialchars($alert['type']) ?>">
-            <div class="alert-item-title"><?= htmlspecialchars($alert['title']) ?></div>
-            <div class="alert-item-meta"><?= htmlspecialchars($alert['meta']) ?></div>
-            <?php if (!empty($alert['action_label'])): ?>
-              <a href="<?= htmlspecialchars($alert['action_href'] ?? '#') ?>" class="alert-item-action">
-                <?= htmlspecialchars($alert['action_label']) ?>
-              </a>
-            <?php endif; ?>
-          </div>
-        <?php endforeach; ?>
-      </section>
-    <?php endif; ?>
- 
-    
   </div>
 </div>

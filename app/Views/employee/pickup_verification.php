@@ -27,7 +27,6 @@ $recentHistory   = $recentHistory   ?? [];
 
 // Layout/page chrome — consumed by layouts/main.php
 $pageTitle    = 'Pickup Verification';
-$pageSubtitle = 'Log and confirm the completion of scheduled pickups by charity partners.';
 $breadcrumbs  = ['Outlet Operations', 'Pickup Verification'];
 $activeRoute  = 'employee.pickups.verify';
 $extraStylesheets = ['dashboard.css'];
@@ -61,7 +60,7 @@ $extraStylesheets = ['dashboard.css'];
       <p class="confirm-desc">
         Token verified for <strong><?= htmlspecialchars($pendingPickup['collector']) ?></strong>
         (<?= htmlspecialchars($pendingPickup['order_id']) ?>). Ensure all items are handed over
-        before confirming — this marks the pickup as completed in the system.
+        before confirming. this marks the pickup as completed in the system.
       </p>
 
       <form action="<?= BASE_URL ?>/employee/pickups/complete" method="post">

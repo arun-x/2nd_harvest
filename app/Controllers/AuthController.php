@@ -12,6 +12,60 @@
  
 class AuthController extends BaseController
 {
+    // Business registration document upload (charity sign-up)
+    private const DOC_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+    private const DOC_ALLOWED   = [                 // detected MIME => stored extension
+        'application/pdf' => 'pdf',
+        'image/jpeg'      => 'jpg',
+        'image/png'       => 'png',
+    ];
+
+    /** Uploaded docs live OUTSIDE public/ so they can't be fetched by URL. */
+    private function docStorageDir(): string
+    {
+        return __DIR__ . '/../../storage/charity_docs';
+    }
+
+    private function validateBusinessDoc(?array $file): ?string
+    {
+        if ($file === null || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return 'Please upload your business registration document.';
+        }
+        if (in_array($file['error'], [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
+            return 'That file is too large. The maximum size is 5 MB.';
+        }
+        if ($file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) {
+            return 'The upload failed. Please try again.';
+        }
+        if ($file['size'] > self::DOC_MAX_BYTES) {
+            return 'That file is too large. The maximum size is 5 MB.';
+        }
+
+        // Check the real content type, not the browser-supplied one or the file name.
+        $mime = (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
+        if (!isset(self::DOC_ALLOWED[$mime])) {
+            return 'Only PDF, JPG or PNG files are allowed.';
+        }
+        return null;
+    }
+
+    /** Moves the validated upload into storage under a random name; returns the stored relative path. */
+    private function saveBusinessDoc(array $file): string
+    {
+        $mime = (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
+        $dir  = $this->docStorageDir();
+
+        if (!is_dir($dir) && !mkdir($dir, 0755, true)) {
+            throw new RuntimeException('Could not create document storage directory.');
+        }
+
+        $name = bin2hex(random_bytes(16)) . '.' . self::DOC_ALLOWED[$mime];
+        if (!move_uploaded_file($file['tmp_name'], $dir . '/' . $name)) {
+            throw new RuntimeException('Could not store uploaded document.');
+        }
+        return 'charity_docs/' . $name;
+    }
+
     private function panelContent(): array
     {
         return [
@@ -98,6 +152,7 @@ class AuthController extends BaseController
             ? trim($_POST['full_name'])
             : trim($_POST['contact_person']);
 
+        $savedDocPath = null;
         $pdo = Database::connection();
         try {
             $pdo->beginTransaction();
@@ -119,17 +174,23 @@ class AuthController extends BaseController
                     'region'          => trim($_POST['branch_name']),
                 ]);
             } elseif ($role === 'charity') {
+                $savedDocPath = $this->saveBusinessDoc($_FILES['business_reg_doc']);
+
                 Charity::create([
-                    'user_id'           => $userId,
-                    'org_name'          => trim($_POST['charity_name']),
-                    'address'           => trim($_POST['service_area']),
-                    'operational_focus' => trim($_POST['charity_type']),
+                    'user_id'               => $userId,
+                    'org_name'              => trim($_POST['charity_name']),
+                    'address'               => trim($_POST['service_area']),
+                    'operational_focus'     => trim($_POST['charity_type']),
+                    'verification_doc_path' => $savedDocPath,
                 ]);
             }
 
             $pdo->commit();
         } catch (Throwable $e) {
             $pdo->rollBack();
+            if ($savedDocPath !== null) {
+                @unlink($this->docStorageDir() . '/' . basename($savedDocPath)); // don't leave an orphaned upload
+            }
             Session::set('register_old', $_POST);
             Session::set('register_errors', ['email' => 'Could not create account. Please try again.']);
             header('Location: ' . BASE_URL . '/register/' . $role);
@@ -165,6 +226,13 @@ class AuthController extends BaseController
             $errors['password'] = 'Password must be at least 8 characters.';
         }
  
+        if ($role === 'charity') {
+            $docError = $this->validateBusinessDoc($_FILES['business_reg_doc'] ?? null);
+            if ($docError !== null) {
+                $errors['business_reg_doc'] = $docError;
+            }
+        }
+
         if (empty($input['agree'])) {
             $errors['agree'] = 'You must agree to the Terms of Service and Privacy Policy.';
         }

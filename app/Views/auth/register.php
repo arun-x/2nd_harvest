@@ -112,7 +112,7 @@ function reg_error($errors, $key) {
             <a href="<?= BASE_URL ?>/register/supermarket" class="role-tab <?= $role === 'supermarket' ? 'active' : '' ?>">Supermarket</a>
           </div>
  
-          <form action="<?= BASE_URL ?>/register" method="post" novalidate>
+          <form action="<?= BASE_URL ?>/register" method="post" enctype="multipart/form-data" novalidate>
             <input type="hidden" name="role" value="<?= htmlspecialchars($role) ?>">
  
             <?php if ($role === 'supermarket'): ?>
@@ -277,6 +277,15 @@ function reg_error($errors, $key) {
                   </div>
                   <?= reg_error($errors, 'service_area') ?>
                 </div>
+              </div>
+
+              <div class="field">
+                <label class="field-label" for="business_reg_doc">Business Registration Document</label>
+                <input class="input input-file" type="file" id="business_reg_doc" name="business_reg_doc"
+                       accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                       data-max-size="5242880">
+                <div class="field-hint">Upload your registration certificate as a PDF, JPG or PNG (max 5 MB). We use it to verify your organization.</div>
+                <?= reg_error($errors, 'business_reg_doc') ?>
               </div>
  
             <?php else: /* consumer */ ?>

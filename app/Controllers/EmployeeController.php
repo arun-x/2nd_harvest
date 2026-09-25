@@ -1,10 +1,8 @@
 <?php
 /**
  * app/Controllers/EmployeeController.php
- * dashboard() below uses hardcoded sample data matching the mockup, just
- * to prove the routing -> controller -> view -> layout chain works.
- * Swap the sample arrays for real Model calls once Listing.php / Outlet.php
- * have query methods (see comment block at the top of Views/employee/dashboard.php).
+ * Supermarket staff module. Every figure on these pages comes from the
+ * signed-in staff member's outlet in the database.
  */
  
 require_once __DIR__ . '/BaseController.php';
@@ -46,13 +44,14 @@ class EmployeeController extends BaseController
 
         $activeCount  = count(array_filter($allInventory, fn($i) => $i['status'] === 'active'));
         $expiredCount = count(array_filter($allInventory, fn($i) => $i['status'] === 'expired'));
-        $totalKg = array_sum(array_map(fn($r) => (float) $r['quantity_kg'], $rows));
+        $rescuedKg      = $outlet ? Pickup::totalKgForOutlet((int) $outlet['id']) : 0.0;
+        $collectionRate = $outlet ? Pickup::collectionRateForOutlet((int) $outlet['id']) : null;
 
         $stats = [
             'active_listings' => $activeCount,
-            'total_rescued'   => number_format($totalKg, 1) . ' kg',
+            'total_rescued'   => number_format($rescuedKg, 1) . ' kg',
             'expiring_soon'   => $expiredCount,
-            'collection_rate' => count($allInventory) > 0 ? '—' : '0%',
+            'collection_rate' => $collectionRate !== null ? $collectionRate . '%' : '—',
         ];
  
         // --- Filters & sort, read from the query string ---
@@ -101,38 +100,12 @@ class EmployeeController extends BaseController
         $inventory = array_values($inventory);
  
         $communityImpact = [
-            'food_saved'        => '4,250 kg',
-            'charities_served'  => 12,
+            'food_saved'       => number_format($rescuedKg, 1) . ' kg',
+            'charities_served' => $outlet ? Pickup::charitiesServedForOutlet((int) $outlet['id']) : 0,
         ];
- 
-        $alerts = [
-            [
-                'type' => 'danger',
-                'title' => 'Expired: Sweet Bell Peppers',
-                'meta' => 'SKU VEG-BEL-005 · 5 units',
-                'action_label' => 'Clear Listing',
-                'action_href' => BASE_URL . '/employee/listings/5',
-            ],
-            [
-                'type' => 'warning',
-                'title' => 'Expiring Today: Ripe Bananas',
-                'meta' => '20 units remaining · Donate now',
-                'action_label' => 'Push to Charity',
-                'action_href' => BASE_URL . '/employee/listings/2/push',
-            ],
-        ];
- 
-        $highlight = [
-            'id' => 6,
-            'image' => $this->imageFor('Fresh Mixed Vegetable Crate', 'vegetable'),
-            'badge' => 'Available',
-            'title' => 'Fresh Mixed Vegetable Crate',
-            'category' => 'Vegetables',
-            'location' => 'Shelf A-12',
-            'expires' => '4 hours',
-            'quantity_label' => '12 units',
-        ];
- 
+
+        $alerts = $this->criticalAlerts($rows);
+
         $activeListingsTotal = $stats['active_listings'];
  
         // 1. Render the inner view into a buffer. This also sets
@@ -146,6 +119,48 @@ class EmployeeController extends BaseController
         require __DIR__ . '/../Views/layouts/main.php';
     }
  
+    /**
+     * Real alerts for this outlet's listings: today's items whose claim
+     * deadline is under two hours away, then past-day items that expired
+     * with stock still unclaimed. At most three of each.
+     */
+    private function criticalAlerts(array $rows): array
+    {
+        $fmtKg   = fn(float $n): string => rtrim(rtrim(number_format($n, 1, '.', ''), '0'), '.');
+        $today   = date('Y-m-d');
+        $now     = time();
+        $closing = [];
+        $expired = [];
+
+        foreach ($rows as $r) {
+            $remaining = (float) ($r['quantity_remaining_kg'] ?? 0);
+            if ($r['status'] !== 'available' || $remaining <= 0) {
+                continue;
+            }
+            $deadline = strtotime($r['claim_deadline']);
+            if ($r['expiry_date'] === $today && $deadline > $now && $deadline - $now <= 2 * 3600) {
+                $closing[] = [
+                    'type'         => 'warning',
+                    'title'        => 'Claims closing soon: ' . $r['item_name'],
+                    'meta'         => $fmtKg($remaining) . ' kg unclaimed · claims close at ' . date('g:i A', $deadline),
+                    'action_label' => 'Edit listing',
+                    'action_href'  => BASE_URL . '/employee/listings/' . (int) $r['id'] . '/edit',
+                ];
+            } elseif ($r['expiry_date'] < $today) {
+                $expired[] = [
+                    'type'         => 'danger',
+                    'title'        => 'Expired: ' . $r['item_name'],
+                    'meta'         => $fmtKg($remaining) . ' kg went unclaimed · expired ' . date('M j', strtotime($r['expiry_date'])),
+                    'action_label' => 'Edit listing',
+                    'action_href'  => BASE_URL . '/employee/listings/' . (int) $r['id'] . '/edit',
+                ];
+            }
+        }
+
+        // forOutlet() sorts oldest expiry first; show the most recent expiries.
+        return array_merge(array_slice($closing, 0, 3), array_slice(array_reverse($expired), 0, 3));
+    }
+
     // Pick the best image in public/assets/images/ for a listing.
     // Tries an item-name keyword match first (bananas, broccoli, ...),
     // then a category-wide default, then a generic crate.
@@ -764,23 +779,17 @@ class EmployeeController extends BaseController
 
     public function listingPublished(): void
     {
-        // Normal flow: storeListing() redirects here after a successful
-        // save, with the real listing stashed in session. Falling back to
-        // sample data below only so this route still previews standalone.
+        // storeListing() redirects here after a successful save, with the
+        // real listing stashed in session. Without one (page refreshed or
+        // opened directly) there is nothing to show, so go back.
         $listing = Session::get('just_published');
         Session::forget('just_published');
- 
-        $listing = $listing ?? [
-            'id'              => 42,
-            'title'           => 'Gala Apples (Case of 24)',
-            'category'        => 'Fruits',
-            'quantity'        => '5 Crates / 20kg',
-            'expires_label'   => 'Today, 8:00 PM',
-            'pickup_location' => 'Loading Dock B, South Entrance',
-            'listing_ref'     => 'LST-1042',
-            'image'           => $this->imageFor('Gala Apples', 'fruit'),
-        ];
- 
+
+        if (!$listing) {
+            header('Location: ' . BASE_URL . '/employee/dashboard');
+            exit;
+        }
+
         ob_start();
         require __DIR__ . '/../Views/employee/listing_published.php';
         $content = ob_get_clean();

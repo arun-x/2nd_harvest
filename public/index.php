@@ -31,11 +31,16 @@ require __DIR__ . '/../app/Models/Charity.php';
 require __DIR__ . '/../app/Models/Listing.php';
 require __DIR__ . '/../app/Models/Reservation.php';
 require __DIR__ . '/../app/Models/Pickup.php';
+require __DIR__ . '/../app/Models/Notification.php';
+require __DIR__ . '/../app/Models/AuditLog.php';
+require __DIR__ . '/../app/Models/Dispute.php';
+require __DIR__ . '/../app/Models/Report.php';
 require __DIR__ . '/../app/Core/Auth.php';
 require __DIR__ . '/../app/Controllers/BaseController.php';
 require __DIR__ . '/../app/Controllers/HomeController.php';
 require __DIR__ . '/../app/Controllers/AuthController.php';
 require __DIR__ . '/../app/Controllers/EmployeeController.php';
+require __DIR__ . '/../app/Controllers/AdminController.php';
 
 date_default_timezone_set('Asia/Colombo');
 
@@ -63,6 +68,29 @@ $router->get ('/terms',                 [AuthController::class, 'terms']);
 $router->get ('/privacy',               [AuthController::class, 'privacy']);
 $router->post('/login',                 [AuthController::class, 'authenticate']);
 $router->post('/logout',                [AuthController::class, 'logout']);
+
+// -------------------------------------------------------------
+// Admin portal — only reachable via /admin (not linked from /login)
+// -------------------------------------------------------------
+$router->get ('/admin',                 [AdminController::class, 'login']);
+$router->post('/admin/login',           [AdminController::class, 'authenticate']);
+$router->get ('/admin/dashboard',                     [AdminController::class, 'dashboard']);
+$router->get ('/admin/registrations',                 [AdminController::class, 'registrations']);
+$router->post('/admin/registrations/{id}/approve',    [AdminController::class, 'approveRegistration']);
+$router->post('/admin/registrations/{id}/reject',     [AdminController::class, 'rejectRegistration']);
+$router->get ('/admin/listings',                      [AdminController::class, 'listings']);
+$router->post('/admin/listings/{id}/remove',          [AdminController::class, 'removeListing']);
+$router->post('/admin/listings/{id}/restore',         [AdminController::class, 'restoreListing']);
+$router->get ('/admin/disputes',                      [AdminController::class, 'disputes']);
+$router->post('/admin/disputes/{id}/request-info',    [AdminController::class, 'requestDisputeInfo']);
+$router->post('/admin/disputes/{id}/resolve',         [AdminController::class, 'resolveDispute']);
+$router->get ('/admin/reports',                       [AdminController::class, 'reports']);
+$router->get ('/admin/reports/export',                [AdminController::class, 'exportReport']);
+$router->get ('/admin/users',                         [AdminController::class, 'users']);
+$router->post('/admin/users/{id}/lock',               [AdminController::class, 'lockUser']);
+$router->post('/admin/users/{id}/unlock',             [AdminController::class, 'unlockUser']);
+$router->get ('/admin/audit-log',                     [AdminController::class, 'auditLog']);
+$router->get ('/admin/audit-log/export',              [AdminController::class, 'exportAuditLog']);
 
 // -------------------------------------------------------------
 // Supermarket Staff (Malinka's Employee module)

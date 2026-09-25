@@ -104,7 +104,7 @@ $statusBadgeClass = [
         <div class="stat-label">Expired</div>
         <div class="stat-value"><?= htmlspecialchars($stats['expiring_soon']) ?></div>
       </div>
-      <div class="stat-icon" style="background: var(--color-warning-bg); color: var(--color-warning-text);">
+      <div class="stat-icon warning">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       </div>
     </div>

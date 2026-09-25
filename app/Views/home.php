@@ -7,13 +7,14 @@
  * nav, no sidebar) rather than a page inside the authenticated app shell.
  *
  * Expects (with safe fallbacks for local/dev preview):
- *   array $impactStats  ['meals_rescued', 'active_charities', 'co2_offset']
+ *   array $impactStats  ['produce_rescued', 'active_charities', 'supermarket_outlets']
+ *                       — live totals from HomeController
  */
  
 $impactStats = $impactStats ?? [
-  'produce_rescued'    => '550+ kg',
-  'active_charities' => '45+',
-  'supermarket_outlets'       => '96+',
+  'produce_rescued'     => '—',
+  'active_charities'    => '—',
+  'supermarket_outlets' => '—',
 ];
 ?>
 <!DOCTYPE html>
@@ -49,11 +50,6 @@ $impactStats = $impactStats ?? [
  
   <section class="hero">
     <div>
-      <span class="pill">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 4 13v-1a7 7 0 0 1 7-7h1a7 7 0 0 1 7 7v1a7 7 0 0 1-7 7h-1z"/></svg>
-        Join the Rescue Mission
-      </span>
- 
       <h1 class="hero-heading">Saving Food, <span class="accent">Feeding Communities.</span></h1>
  
       <p class="hero-desc">

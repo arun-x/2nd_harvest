@@ -152,8 +152,8 @@ body.landing {
 }
 
 .impact-icon.tone-1 { background: var(--color-primary-dark); }
-.impact-icon.tone-2 { background: #7bc79e; }
-.impact-icon.tone-3 { background: var(--color-primary-light); color: var(--color-primary-dark); }
+.impact-icon.tone-2 { background: var(--color-primary); }
+.impact-icon.tone-3 { background: var(--color-primary); }
 
 .impact-value {
   font-size: var(--fs-3xl);
@@ -207,8 +207,8 @@ body.landing {
   width: 40px;
   height: 40px;
   border-radius: var(--radius-md);
-  background: var(--color-primary-light);
-  color: var(--color-primary-dark);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -216,8 +216,8 @@ body.landing {
 }
 
 .partner-card.featured .partner-icon {
-  background: rgba(255, 255, 255, 0.18);
-  color: var(--color-text-inverse);
+  background: var(--color-surface);
+  color: var(--color-primary-dark);
 }
 
 .partner-title {

@@ -34,6 +34,7 @@ CREATE TABLE outlets (
   outlet_name     VARCHAR(150) NOT NULL,
   branch_location VARCHAR(255) NOT NULL,
   region          VARCHAR(100) NOT NULL,
+  business_reg_number VARCHAR(50) NULL,
   license_doc_path VARCHAR(255) NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
@@ -45,6 +46,7 @@ CREATE TABLE charities (
   id              INT AUTO_INCREMENT PRIMARY KEY,
   user_id         INT NOT NULL,
   org_name        VARCHAR(150) NOT NULL,
+  charity_reg_number VARCHAR(50) NULL,
   address         VARCHAR(255) NOT NULL,
   operational_focus VARCHAR(150) NULL,
   verification_doc_path VARCHAR(255) NULL,

@@ -108,7 +108,9 @@ class AuthController extends BaseController
                 'password_hash' => password_hash($_POST['password'], PASSWORD_DEFAULT),
                 'full_name'     => $fullName,
                 'phone'         => $_POST['phone'] ?? null,
-                'status'        => 'approved',
+                // Supermarkets and charities are verified by an admin
+                // (Admin > Registrations) before they can sign in.
+                'status'        => $role === 'consumer' ? 'approved' : 'pending',
             ]);
 
             if ($role === 'supermarket') {
@@ -117,11 +119,13 @@ class AuthController extends BaseController
                     'outlet_name'     => trim($_POST['organization_name']),
                     'branch_location' => trim($_POST['address']),
                     'region'          => trim($_POST['branch_name']),
+                    'business_reg_number' => trim($_POST['business_reg_number']),
                 ]);
             } elseif ($role === 'charity') {
                 Charity::create([
                     'user_id'           => $userId,
                     'org_name'          => trim($_POST['charity_name']),
+                    'charity_reg_number' => trim($_POST['charity_reg_number']),
                     'address'           => trim($_POST['service_area']),
                     'operational_focus' => trim($_POST['charity_type']),
                 ]);
@@ -136,7 +140,9 @@ class AuthController extends BaseController
             exit;
         }
 
-        Session::flash('success', 'Account created! You can now log in.');
+        Session::flash('success', $role === 'consumer'
+            ? 'Account created! You can now log in.'
+            : 'Account created! An administrator will verify your registration before you can log in.');
         header('Location: ' . BASE_URL . '/login');
         exit;
     }
@@ -250,9 +256,25 @@ class AuthController extends BaseController
             exit;
         }
 
+        // Only admin-approved accounts may sign in.
+        $statusErrors = [
+            'pending'  => 'Your registration is still being verified by an administrator.',
+            'rejected' => 'Your registration was not approved. Please contact support.',
+            'locked'   => 'Your account has been locked. Please contact support.',
+        ];
+        if (isset($statusErrors[$user['status']])) {
+            Session::set('login_error', $statusErrors[$user['status']]);
+            Session::set('login_old_email', $email);
+            Session::set('login_old_role', $role);
+            header('Location: ' . BASE_URL . '/login');
+            exit;
+        }
+
         Session::set('user_id', (int) $user['id']);
         Session::set('user_role', $user['role']);
         Session::set('user_email', $user['email']);
+        // The admin panel only opens for sessions signed in via /admin.
+        Session::forget('admin_authenticated');
 
         // Also populate the single 'user' array that Arun's Consumer module
         // reads via App\Core\Session::get('user'). Both modules now see the
@@ -267,7 +289,7 @@ class AuthController extends BaseController
             'employee' => BASE_URL . '/employee/dashboard',
             'charity'  => BASE_URL . '/', // TODO: point at the charity dashboard once it's built
             'consumer' => BASE_URL . '/consumer/dashboard',
-            'admin'    => BASE_URL . '/', // TODO: point at the admin dashboard once it's built
+            'admin'    => BASE_URL . '/admin', // admins must sign in via the /admin form
         ];
  
         header('Location: ' . ($destinations[$user['role']] ?? BASE_URL . '/'));
@@ -276,11 +298,14 @@ class AuthController extends BaseController
 
     public function logout(): void
     {
+        $wasAdmin = Session::get('user_role') === 'admin';
         Session::forget('user_id');
         Session::forget('user_role');
         Session::forget('user_email');
         Session::forget('user');
-        header('Location: ' . BASE_URL . '/');
+        Session::forget('admin_csrf');
+        Session::forget('admin_authenticated');
+        header('Location: ' . BASE_URL . ($wasAdmin ? '/admin' : '/'));
         exit;
     }
 }

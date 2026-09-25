@@ -141,8 +141,8 @@
   width: 40px;
   height: 40px;
   border-radius: var(--radius-md);
-  background: var(--color-neutral-bg);
-  color: var(--color-text-secondary);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -397,6 +397,78 @@
   font-weight: 600;
 }
  
+/* --------------------------------------------------------------------------
+   Admin portal sign-in (/admin)
+   -------------------------------------------------------------------------- */
+.admin-auth-body {
+  background: #f7faf7;
+}
+
+.admin-brand-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
+  letter-spacing: -0.02em;
+}
+
+.admin-auth-card {
+  max-width: 580px;
+  border-radius: 24px;
+  border-color: #f1f5f9;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.03);
+  padding: var(--space-10);
+}
+
+.admin-muted {
+  color: var(--color-text-muted);
+}
+
+.admin-security-note {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid #f1f5f9;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.admin-security-note p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.admin-security-note svg {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.admin-security-note .admin-security-sub {
+  font-size: 10px;
+  margin-top: var(--space-1);
+}
+
+.admin-return-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  transition: color 0.15s ease;
+}
+
+.admin-return-link:hover {
+  color: var(--color-primary);
+}
+
+@media (max-width: 600px) {
+  .admin-auth-card {
+    padding: var(--space-6);
+  }
+}
+
 /* --------------------------------------------------------------------------
    Responsive
    -------------------------------------------------------------------------- */

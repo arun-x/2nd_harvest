@@ -48,6 +48,51 @@ class Reservation extends BaseModel
         return $row ?: null;
     }
 
+    private const ADMIN_SELECT = "SELECT r.*,
+               l.item_name, o.outlet_name,
+               u.full_name, u.email, u.role AS user_role,
+               COALESCE(ps.slot_end, l.claim_deadline) AS pickup_due
+        FROM reservations r
+        JOIN listings l          ON l.id = r.listing_id
+        JOIN outlets  o          ON o.id = l.outlet_id
+        JOIN users    u          ON u.id = r.user_id
+        LEFT JOIN pickup_slots ps ON ps.id = r.pickup_slot_id";
+
+    /**
+     * Cancels every active reservation on a listing (used when an admin
+     * removes it) and returns the cancelled rows so their owners can be told.
+     */
+    public static function cancelActiveForListing(int $listingId): array
+    {
+        $stmt = self::db()->prepare(
+            "SELECT id, user_id, reserved_qty_kg FROM reservations WHERE listing_id = :lid AND status = 'active'"
+        );
+        $stmt->execute([':lid' => $listingId]);
+        $rows = $stmt->fetchAll();
+
+        self::db()->prepare(
+            "UPDATE reservations SET status = 'cancelled' WHERE listing_id = :lid AND status = 'active'"
+        )->execute([':lid' => $listingId]);
+
+        // Return the reserved kg to the listing, as the consumer's own
+        // cancel does, so a later restore shows the right stock.
+        $released = array_sum(array_map(fn($r) => (float) $r['reserved_qty_kg'], $rows));
+        if ($released > 0) {
+            self::db()->prepare(
+                'UPDATE listings SET quantity_remaining_kg = LEAST(quantity_kg, quantity_remaining_kg + :kg) WHERE id = :lid'
+            )->execute([':kg' => $released, ':lid' => $listingId]);
+        }
+
+        return $rows;
+    }
+
+    public static function forListing(int $listingId): array
+    {
+        $stmt = self::db()->prepare(self::ADMIN_SELECT . ' WHERE r.listing_id = :lid ORDER BY r.created_at DESC');
+        $stmt->execute([':lid' => $listingId]);
+        return $stmt->fetchAll();
+    }
+
     public static function markCompleted(int $id): bool
     {
         $stmt = self::db()->prepare(

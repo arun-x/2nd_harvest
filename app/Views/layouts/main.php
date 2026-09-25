@@ -57,9 +57,9 @@ $user = Auth::user() ?? null; // adjust to however app/Core/Auth.php exposes the
         </nav>
 
         <div class="topbar-right">
-          <form class="search-input" action="<?= BASE_URL ?>/employee/dashboard" method="get" role="search">
+          <form class="search-input" action="<?= htmlspecialchars($searchAction ?? BASE_URL . '/employee/dashboard') ?>" method="get" role="search">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" name="q" placeholder="Search listings...">
+            <input type="text" name="q" placeholder="<?= htmlspecialchars($searchPlaceholder ?? 'Search listings...') ?>">
           </form>
 
           <button class="icon-btn" type="button" aria-label="Notifications">

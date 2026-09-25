@@ -11,14 +11,15 @@ class Outlet extends BaseModel
         // show up in the 30km radius filter until re-saved successfully.
         $geo = Geocoder::geocode($data['branch_location']);
 
-        $sql = 'INSERT INTO outlets (user_id, outlet_name, branch_location, region, latitude, longitude)
-                VALUES (:user_id, :outlet_name, :branch_location, :region, :latitude, :longitude)';
+        $sql = 'INSERT INTO outlets (user_id, outlet_name, branch_location, region, business_reg_number, latitude, longitude)
+                VALUES (:user_id, :outlet_name, :branch_location, :region, :business_reg_number, :latitude, :longitude)';
         $stmt = self::db()->prepare($sql);
         $stmt->execute([
             ':user_id'         => $data['user_id'],
             ':outlet_name'     => $data['outlet_name'],
             ':branch_location' => $data['branch_location'],
             ':region'          => $data['region'],
+            ':business_reg_number' => $data['business_reg_number'] ?? null,
             ':latitude'        => $geo['lat'] ?? null,
             ':longitude'       => $geo['lng'] ?? null,
         ]);

@@ -30,6 +30,12 @@ class PriorityWindowService
         return true;
     }
 
+    /** @return array{0:\DateTime,1:\DateTime} today's charity window [start, end] */
+    public function charityWindowBounds(?\DateTime $now = null): array
+    {
+        return $this->windowBounds($now ?? new \DateTime());
+    }
+
     private function windowBounds(\DateTime $now): array
     {
         $start = clone $now;

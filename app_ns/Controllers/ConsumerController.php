@@ -106,11 +106,23 @@ class ConsumerController extends BaseController
             return $row;
         }, $rawListings);
 
+        // Tomorrow's listings (posted after 7 PM) are shown read-only, priced
+        // at the discount they'll have tomorrow when they open for reservation.
+        $tomorrow = new \DateTime('tomorrow');
+        $upcoming = array_map(function (array $row) use ($discount, $tomorrow) {
+            $row['discount_pct']    = $discount->calculateDiscountPercent(new \DateTime($row['expiry_date']), $tomorrow);
+            $row['reference_price'] = (float)($row['reference_price'] ?? 0.0);
+            $row['final_price']     = $discount->applyDiscount($row['reference_price'], $row['discount_pct']);
+            $row['image']           = $this->imageFor($row['item_name'], $row['category']);
+            return $row;
+        }, $listingModel->findUnclaimedForConsumers($category, $outletIds, $tomorrow->format('Y-m-d')));
+
         $this->render('consumer/browse', [
             'title'              => 'Marketplace',
             'active'             => 'marketplace',
             'crumb'              => 'Marketplace',
             'listings'           => $listings,
+            'upcoming'           => $upcoming,
             'selectedCategory'   => $category,
             'consumerCanBrowse'  => $consumerCanBrowse,
             'charityWindowOpen'  => $windowOpen,
@@ -138,6 +150,10 @@ class ConsumerController extends BaseController
         if (!$listing || $listing['status'] !== 'available'
             || (float)$listing['quantity_remaining_kg'] <= 0) {
             $this->flash('error', 'That listing is no longer available.');
+            $this->redirect(BASE_URL . '/consumer/listings');
+        }
+        if ($listing['expiry_date'] !== date('Y-m-d')) {
+            $this->flash('error', 'That listing opens for reservation on its pickup day.');
             $this->redirect(BASE_URL . '/consumer/listings');
         }
 
@@ -182,6 +198,10 @@ class ConsumerController extends BaseController
             $this->flash('error', 'Listing not found.');
             $this->redirect(BASE_URL . '/consumer/listings');
         }
+        if ($listing['expiry_date'] !== date('Y-m-d')) {
+            $this->flash('error', 'That listing opens for reservation on its pickup day.');
+            $this->redirect(BASE_URL . '/consumer/listings');
+        }
 
         // ---- validate ----
         $qty    = (float)($_POST['quantity_kg'] ?? 0);
@@ -195,10 +215,11 @@ class ConsumerController extends BaseController
             $errors[] = 'Only ' . $listing['quantity_remaining_kg']
                      . ' kg is still available.';
         }
-        if ($slotId <= 0) {
+        // Slots are shared (no booking limit), but the slot must belong to
+        // this listing and be one consumers can book (8:30 PM onwards).
+        $validSlotIds = array_map('intval', array_column($slotModel->findAvailableForListing($id), 'id'));
+        if ($slotId <= 0 || !in_array($slotId, $validSlotIds, true)) {
             $errors[] = 'Please choose a pickup slot.';
-        } elseif (!$slotModel->hasCapacity($slotId)) {
-            $errors[] = 'That pickup slot is fully booked.';
         }
 
         if ($errors) {
@@ -336,7 +357,10 @@ class ConsumerController extends BaseController
             $this->flash('error', 'Reservation not found.');
             $this->redirect(BASE_URL . '/consumer/orders');
         }
-        if ($reservation['status'] !== 'active') {
+        $listingModel = new Listing();
+        $listing = $listingModel->find((int)$reservation['listing_id']);
+        // A reservation is only valid on its listing's day.
+        if ($reservation['status'] !== 'active' || !$listing || $listing['expiry_date'] !== date('Y-m-d')) {
             $this->flash('error', 'This reservation cannot be confirmed.');
             $this->redirect(BASE_URL . '/consumer/orders');
         }
@@ -344,7 +368,6 @@ class ConsumerController extends BaseController
         $resModel->markCompleted($reservationId, (float)$reservation['reserved_qty_kg']);
 
         // If the listing is now fully collected, transition its state.
-        $listingModel = new Listing();
         $listing = $listingModel->find((int)$reservation['listing_id']);
         if ($listing && (float)$listing['quantity_remaining_kg'] <= 0) {
             (new ListingStateMachine())
@@ -553,32 +576,5 @@ class ConsumerController extends BaseController
     private function db(): \PDO
     {
         return \App\Core\Database::connect();
-    }
-
-    // Mirrors EmployeeController::imageFor so the marketplace card
-    // shows the same picture the employee sees for the same item.
-    private function imageFor(string $itemName, string $category): string
-    {
-        $base = BASE_URL . '/assets/images/';
-        $name = strtolower($itemName);
-
-        $keywordMap = [
-            'banana'      => 'bananas.jpg',
-            'plantain'    => 'bananas.jpg',
-            'bell pepper' => 'bell-peppers.jpg',
-            'capsicum'    => 'bell-peppers.jpg',
-            'pepper'      => 'bell-peppers.jpg',
-            'broccoli'    => 'broccoli.jpg',
-            'carrot'      => 'carrots.jpg',
-            'strawberr'   => 'strawberries.jpg',
-            'berry'       => 'strawberries.jpg',
-        ];
-        foreach ($keywordMap as $needle => $file) {
-            if (strpos($name, $needle) !== false) {
-                return $base . $file;
-            }
-        }
-
-        return $base . 'produce-crate.jpg';
     }
 }

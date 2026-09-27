@@ -40,23 +40,12 @@ class PickupSlot extends BaseModel
         return $stmt->fetchAll();
     }
 
-    public function hasCapacity(int $slotId): bool
-    {
-        $stmt = $this->db->prepare(
-            "SELECT (booked_count < capacity) AS ok
-               FROM pickup_slots WHERE id = :id"
-        );
-        $stmt->execute(['id' => $slotId]);
-        $row = $stmt->fetch();
-        return !empty($row) && (int)$row['ok'] === 1;
-    }
-
     public function incrementBooked(int $slotId): bool
     {
         $stmt = $this->db->prepare(
             "UPDATE pickup_slots
                SET booked_count = booked_count + 1
-             WHERE id = :id AND booked_count < capacity"
+             WHERE id = :id"
         );
         return $stmt->execute(['id' => $slotId]);
     }

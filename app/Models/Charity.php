@@ -17,4 +17,12 @@ class Charity extends BaseModel
         ]);
         return (int) self::db()->lastInsertId();
     }
+
+    public static function findByUserId(int $userId): ?array
+    {
+        $stmt = self::db()->prepare('SELECT * FROM charities WHERE user_id = :uid LIMIT 1');
+        $stmt->execute([':uid' => $userId]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
 }

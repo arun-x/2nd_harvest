@@ -32,10 +32,12 @@ class Reservation extends BaseModel
              LEFT JOIN charities c ON c.user_id = u.id
              WHERE l.outlet_id = :oid
                AND r.status = 'active'
+               AND l.expiry_date = :today
                AND UPPER(SUBSTRING(MD5(CONCAT(r.id, r.created_at)), 1, 6)) = :hash
              LIMIT 1"
         );
-        $stmt->execute([':oid' => $outletId, ':hash' => $hash]);
+        // A reservation is only valid on its listing's day (see Housekeeping).
+        $stmt->execute([':oid' => $outletId, ':today' => date('Y-m-d'), ':hash' => $hash]);
         $row = $stmt->fetch();
         return $row ?: null;
     }

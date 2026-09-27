@@ -47,6 +47,7 @@ require __DIR__ . '/../app/Models/PasswordResetRequest.php';
 require __DIR__ . '/../app/Models/ContactMessage.php';
 require __DIR__ . '/../app/Core/Auth.php';
 require __DIR__ . '/../app/Core/Recovery.php';
+require __DIR__ . '/../app/Core/Housekeeping.php';
 require __DIR__ . '/../app/Controllers/BaseController.php';
 require __DIR__ . '/../app/Controllers/HomeController.php';
 require __DIR__ . '/../app/Controllers/AuthController.php';
@@ -56,6 +57,9 @@ require __DIR__ . '/../app/Controllers/AdminController.php';
 date_default_timezone_set('Asia/Colombo');
 
 Session::start();
+
+// End-of-day cleanup: expire past reservations, clear unreserved stock.
+Housekeeping::run();
 
 $router = new Router();
 $router->setBasePath(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])));
@@ -154,5 +158,19 @@ $router->get ('/consumer/profile',                [\App\Controllers\ConsumerCont
 $router->post('/consumer/profile',                [\App\Controllers\ConsumerController::class, 'updateProfile']);
 $router->post('/consumer/profile/password',       [\App\Controllers\ConsumerController::class, 'changePassword']);
 $router->get ('/consumer/notifications',          [\App\Controllers\ConsumerController::class, 'notifications']);
+
+// -------------------------------------------------------------
+// Charity (shares the Consumer module's layout and models)
+// -------------------------------------------------------------
+$router->get ('/charity/dashboard',               [\App\Controllers\CharityController::class, 'dashboard']);
+$router->get ('/charity/listings',                [\App\Controllers\CharityController::class, 'browse']);
+$router->get ('/charity/listings/{id}/reserve',   [\App\Controllers\CharityController::class, 'reserve']);
+$router->post('/charity/listings/{id}/reserve',   [\App\Controllers\CharityController::class, 'confirmReserve']);
+$router->get ('/charity/pickups',                 [\App\Controllers\CharityController::class, 'pickups']);
+$router->post('/charity/pickups/{id}/cancel',     [\App\Controllers\CharityController::class, 'cancelReservation']);
+$router->get ('/charity/notifications',           [\App\Controllers\CharityController::class, 'notifications']);
+$router->get ('/charity/profile',                 [\App\Controllers\CharityController::class, 'profile']);
+$router->post('/charity/profile',                 [\App\Controllers\CharityController::class, 'updateProfile']);
+$router->post('/charity/profile/password',        [\App\Controllers\CharityController::class, 'changePassword']);
 
 $router->dispatch($_SERVER['REQUEST_METHOD'], parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));

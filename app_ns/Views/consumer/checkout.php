@@ -120,20 +120,19 @@ $defaultQty = htmlspecialchars((string)($input['quantity_kg'] ?? min(1, (float)$
         <?php else: ?>
           <div class="slot-grid">
             <?php foreach ($slots as $slot):
-              $isFull    = (int)$slot['booked_count'] >= (int)$slot['capacity'];
-              $remaining = max(0, (int)$slot['capacity'] - (int)$slot['booked_count']);
+              $booked    = (int)$slot['booked_count'];
               $selected  = ((int)($input['pickup_slot_id'] ?? 0) === (int)$slot['id']);
               $startFmt  = (new \DateTime($slot['slot_start']))->format('D g:i A');
               $endFmt    = (new \DateTime($slot['slot_end']))->format('g:i A');
             ?>
-              <label class="slot-option <?= $isFull ? 'is-full' : '' ?>">
+              <label class="slot-option">
                 <input type="radio" name="pickup_slot_id"
                        value="<?= (int)$slot['id'] ?>"
-                       <?= $isFull ? 'disabled' : 'required' ?>
+                       required
                        <?= $selected ? 'checked' : '' ?>>
                 <span class="slot-time"><?= htmlspecialchars($startFmt) ?> – <?= htmlspecialchars($endFmt) ?></span>
                 <span class="slot-remaining">
-                  <?= $isFull ? 'Full' : $remaining . ' slots left' ?>
+                  <?= $booked > 0 ? $booked . ' booked' : 'Available' ?>
                 </span>
               </label>
             <?php endforeach; ?>
@@ -163,10 +162,6 @@ $defaultQty = htmlspecialchars((string)($input['quantity_kg'] ?? min(1, (float)$
               LKR <?= number_format($listing['final_price'] * (float)$defaultQty, 2) ?>
             </span>
           </div>
-          <p class="form-hint" style="margin-top:8px;">
-            Simulated pre-payment — no real payment gateway is called. The amount is
-            recorded on your reservation and shown as “paid” in Order History.
-          </p>
         </div>
       </div>
 

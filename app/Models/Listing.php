@@ -4,9 +4,9 @@ require_once __DIR__ . '/BaseModel.php';
 class Listing extends BaseModel
 {
     /**
-     * Status as the rest of the app sees it. Nothing writes 'expired' to the
-     * table — listings are only on the marketplace on their expiry day — so
-     * an 'available' listing from a past day is reported as expired.
+     * Status as the rest of the app sees it. Listings are only on the
+     * marketplace on their expiry day, so an 'available' listing from a past
+     * day is reported as expired (Housekeeping clears these up shortly after).
      * Expects the listings table aliased as l.
      */
     public const EFFECTIVE_STATUS_SQL =
@@ -140,6 +140,45 @@ class Listing extends BaseModel
             ':expiry_date'     => $data['expiry_date'],
             ':claim_deadline'  => $data['claim_deadline'],
         ]);
+    }
+
+    /**
+     * Give a listing its pickup-slot grid for the given day, unless it
+     * already has slots on that day. Every listing gets seven 30-minute
+     * slots from 7:00 PM through 10:30 PM (store close):
+     *   19:00-19:30, 19:30-20:00, 20:00-20:30  (charity priority window)
+     *   20:30-21:00, 21:00-21:30, 21:30-22:00, 22:00-22:30  (charities + consumers)
+     * Slots are shared time windows: any number of people can book the same
+     * slot. booked_count just records how many have; capacity isn't enforced.
+     *
+     * Used when a listing is created or edited, and by Housekeeping to fix
+     * older listings whose slots are on a different day.
+     */
+    public static function ensurePickupSlots(int $listingId, string $date): void
+    {
+        $db = self::db();
+
+        $check = $db->prepare(
+            'SELECT 1 FROM pickup_slots WHERE listing_id = :id AND DATE(slot_start) = :day LIMIT 1'
+        );
+        $check->execute([':id' => $listingId, ':day' => $date]);
+        if ($check->fetchColumn()) {
+            return;
+        }
+
+        $insert = $db->prepare(
+            'INSERT INTO pickup_slots (listing_id, slot_start, slot_end, capacity, booked_count)
+             VALUES (:listing_id, :start, :end, 1, 0)'
+        );
+        $slot = (new DateTime($date))->setTime(19, 0, 0);
+        $last = (new DateTime($date))->setTime(22, 0, 0);
+        for (; $slot <= $last; $slot->modify('+30 minutes')) {
+            $insert->execute([
+                ':listing_id' => $listingId,
+                ':start'      => $slot->format('Y-m-d H:i:s'),
+                ':end'        => (clone $slot)->modify('+30 minutes')->format('Y-m-d H:i:s'),
+            ]);
+        }
     }
 
     public static function delete(int $id): bool

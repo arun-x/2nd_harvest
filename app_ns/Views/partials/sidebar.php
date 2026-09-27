@@ -1,6 +1,9 @@
 <?php
 /** @var string $active */
 $base = BASE_URL;
+// Charities share this layout with consumers but get their own menu.
+$isCharity = (($user['role'] ?? '') === 'charity');
+$section   = $isCharity ? 'charity' : 'consumer';
 ?>
 <aside class="sidebar">
   <div class="sidebar-brand">
@@ -12,8 +15,22 @@ $base = BASE_URL;
   </div>
 
   <nav>
-    <p class="sidebar-section-label">Consumers</p>
+    <p class="sidebar-section-label"><?= $isCharity ? 'Charities' : 'Consumers' ?></p>
     <div class="sidebar-nav">
+      <?php if ($isCharity): ?>
+      <a href="<?= $base ?>/charity/listings"
+         class="sidebar-nav-item <?= $active === 'feed' ? 'is-active' : '' ?>">
+        <!-- heart-handshake icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        Reservation Feed
+      </a>
+      <a href="<?= $base ?>/charity/pickups"
+         class="sidebar-nav-item <?= $active === 'pickups' ? 'is-active' : '' ?>">
+        <!-- calendar-clock icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h5"/><path d="M17.5 17.5 16 16.3V14"/><circle cx="16" cy="16" r="6"/></svg>
+        Pickup Scheduler
+      </a>
+      <?php else: ?>
       <a href="<?= $base ?>/consumer/listings"
          class="sidebar-nav-item <?= $active === 'marketplace' ? 'is-active' : '' ?>">
         <!-- shopping-bag icon -->
@@ -26,13 +43,14 @@ $base = BASE_URL;
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
         Order History
       </a>
-      <a href="<?= $base ?>/consumer/notifications"
+      <?php endif; ?>
+      <a href="<?= $base ?>/<?= $section ?>/notifications"
          class="sidebar-nav-item <?= $active === 'notifications' ? 'is-active' : '' ?>">
         <!-- bell icon -->
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
         Notifications
       </a>
-      <a href="<?= $base ?>/consumer/profile"
+      <a href="<?= $base ?>/<?= $section ?>/profile"
          class="sidebar-nav-item <?= $active === 'profile' ? 'is-active' : '' ?>">
         <!-- user icon -->
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>

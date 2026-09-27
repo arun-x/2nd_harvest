@@ -46,16 +46,15 @@ $sections = [
   'charity' => [
     'label' => 'Charities',
     'links' => [
-      ['route' => 'charity.reservations',  'label' => 'Reservation Feed',  'href' => BASE_URL . '/charity/reservations'],
-      ['route' => 'charity.pickups.schedule', 'label' => 'Pickup Scheduler', 'href' => BASE_URL . '/charity/pickups/schedule'],
-      ['route' => 'charity.impact',        'label' => 'Impact Log',        'href' => BASE_URL . '/charity/impact'],
+      ['route' => 'charity.feed',     'label' => 'Reservation Feed', 'href' => BASE_URL . '/charity/listings'],
+      ['route' => 'charity.pickups',  'label' => 'Pickup Scheduler', 'href' => BASE_URL . '/charity/pickups'],
     ],
   ],
   'consumer' => [
     'label' => 'Consumers',
     'links' => [
-      ['route' => 'consumer.marketplace',  'label' => 'Marketplace',    'href' => BASE_URL . '/marketplace'],
-      ['route' => 'consumer.orders',       'label' => 'Order History',  'href' => BASE_URL . '/orders'],
+      ['route' => 'consumer.marketplace',  'label' => 'Marketplace',    'href' => BASE_URL . '/consumer/listings'],
+      ['route' => 'consumer.orders',       'label' => 'Order History',  'href' => BASE_URL . '/consumer/orders'],
     ],
   ],
   'admin' => [

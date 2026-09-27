@@ -26,7 +26,7 @@ $breadcrumbs  = ['Outlet Dashboard', 'Edit Listing'];
 $activeRoute  = 'employee.dashboard';
 $extraScripts = ['create-listing.js'];
 $pageActions = '
-  <a href="<?= BASE_URL ?>/employee/dashboard" class="btn btn-secondary">
+  <a href="' . BASE_URL . '/employee/dashboard" class="btn btn-secondary">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     Back
   </a>
@@ -115,22 +115,13 @@ function edit_field_error($errors, $name) {
         <label class="field-label" for="best_before_date">Best Before / Expiry Date</label>
         <input
           class="input" type="date" id="best_before_date" name="best_before_date"
-          value="<?= htmlspecialchars(date('Y-m-d')) ?>"
+          value="<?= htmlspecialchars($old['best_before_date'] ?? date('Y-m-d')) ?>"
           readonly
         >
         <div class="field-hint">
-          Listings are limited to today. Pickup slots run every 30 minutes until the store closes at 10:30 PM.
+          A listing stays on the day it was posted for (listings from earlier days move to today when saved). Pickup slots run every 30 minutes until the store closes at 10:30 PM.
         </div>
         <?= edit_field_error($errors, 'best_before') ?>
-      </div>
-
-      <div class="field">
-        <label class="field-label" for="pickup_location">Specific Pickup Location</label>
-        <input
-          class="input" type="text" id="pickup_location" name="pickup_location"
-          value="<?= htmlspecialchars($old['pickup_location'] ?? '-') ?>"
-        >
-        <?= edit_field_error($errors, 'pickup_location') ?>
       </div>
     </section>
 
@@ -144,7 +135,7 @@ function edit_field_error($errors, $name) {
     <div class="callout-title">Editing tips</div>
     <ul>
       <li>Changes are visible on the dashboard immediately after saving.</li>
-      <li>The expiry date must still be today or up to 2 days away.</li>
+      <li>The date can't be changed. Listings from earlier days move to today when saved.</li>
       <li>To remove this listing entirely, use the Delete button on the dashboard instead.</li>
     </ul>
   </aside>

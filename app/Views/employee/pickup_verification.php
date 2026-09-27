@@ -135,7 +135,6 @@ $extraStylesheets = ['dashboard.css'];
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           Recent History
         </h2>
-        <a href="<?= BASE_URL ?>/employee/pickups/history" class="text-primary font-semibold" style="font-size: var(--fs-sm);">View All</a>
       </div>
 
       <?php if (empty($recentHistory)): ?>

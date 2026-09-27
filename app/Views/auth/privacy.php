@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Privacy Policy — 2nd Harvest</title>
+  <title>Privacy Policy | 2nd Harvest</title>
   <link rel="stylesheet" href="<?= asset_url('css/style.css') ?>">
   <link rel="stylesheet" href="<?= asset_url('css/auth.css') ?>">
 </head>

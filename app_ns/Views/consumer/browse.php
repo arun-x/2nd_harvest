@@ -1,6 +1,7 @@
 <?php
 /**
  * @var array $listings           Decorated with discount_pct, final_price, reference_price.
+ * @var array $upcoming           Tomorrow's listings, same shape; shown read-only.
  * @var string $selectedCategory  'all' | 'fruit' | 'vegetable'
  * @var bool $consumerCanBrowse   False before 8:30 PM (charity window still open).
  * @var bool $charityWindowOpen
@@ -185,6 +186,61 @@ $expiryLabel = function (string $ymd): string {
               </span>
             </div>
             <span class="pricing-tag">Pre-pay to reserve</span>
+          </div>
+        </div>
+      </article>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
+
+<?php if (!empty($upcoming)): ?>
+  <section class="listings-subheader upcoming-subheader">
+    <h2>Coming Tomorrow</h2>
+    <span class="location-note">Posted this evening for pickup tomorrow. You can reserve these from tomorrow.</span>
+  </section>
+  <div class="product-grid">
+    <?php foreach ($upcoming as $l):
+      $searchIdx = strtolower(implode(' ', [$l['item_name'], $l['category'], $l['outlet_name'] ?? '']));
+      $pct    = (int)$l['discount_pct'];
+      $isFree = $l['final_price'] <= 0;
+    ?>
+      <article class="product-card is-upcoming" data-product-card data-search-index="<?= htmlspecialchars($searchIdx) ?>">
+        <div class="product-card-image" style="background-image: url('<?= htmlspecialchars($l['image']) ?>');">
+          <span class="product-badge <?= $isFree ? 'badge-tier-free' : $badgeClass($pct) ?>"><?= $isFree ? 'FREE PICKUP' : ($pct . '% OFF') ?></span>
+          <span class="product-badge badge-status-upcoming">Tomorrow</span>
+        </div>
+        <div class="product-card-body">
+          <div>
+            <p class="product-title" title="<?= htmlspecialchars($l['item_name']) ?>"><?= htmlspecialchars($l['item_name']) ?></p>
+            <p class="product-category"><?= htmlspecialchars(ucfirst($l['category'])) ?></p>
+          </div>
+          <div class="product-meta">
+            <div class="product-meta-row">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+              <span><?= htmlspecialchars($l['outlet_name'] ?? 'Local outlet') ?></span>
+            </div>
+            <div class="product-meta-row">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+              <span>Pickup <?= htmlspecialchars(date('D, M j', strtotime($l['expiry_date']))) ?></span>
+            </div>
+            <div class="product-meta-row">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="5" x="2" y="4" rx="2"/><path d="M4 9v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9"/><path d="M10 13h4"/></svg>
+              <span><?= htmlspecialchars(number_format((float)$l['quantity_remaining_kg'], 1)) ?> kg listed</span>
+            </div>
+          </div>
+
+          <span class="btn btn-secondary btn-block" aria-disabled="true">Opens tomorrow</span>
+
+          <div class="product-pricing">
+            <div>
+              <?php if ($l['reference_price'] > 0): ?>
+                <span class="price-original">LKR <?= number_format($l['reference_price'], 2) ?></span>
+              <?php endif; ?>
+              <span class="price-discounted <?= $isFree ? 'is-free' : '' ?>">
+                <?= $isFree ? 'FREE' : 'LKR ' . number_format($l['final_price'], 2) . ' / kg' ?>
+              </span>
+            </div>
+            <span class="pricing-tag">Tomorrow's price</span>
           </div>
         </div>
       </article>

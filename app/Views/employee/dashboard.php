@@ -54,11 +54,11 @@ $breadcrumbs  = ['Outlet', 'Dashboard'];
 $activeRoute  = 'employee.dashboard';
 $extraStylesheets = ['dashboard.css'];
 $pageActions = '
-  <a href="<?= BASE_URL ?>/employee/pickups/verify" class="btn btn-secondary">
+  <a href="' . BASE_URL . '/employee/pickups/verify" class="btn btn-secondary">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
     Verify Pickup
   </a>
-  <a href="<?= BASE_URL ?>/employee/listings/create" class="btn btn-primary">
+  <a href="' . BASE_URL . '/employee/listings/create" class="btn btn-primary">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Create Listing
   </a>

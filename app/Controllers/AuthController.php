@@ -295,7 +295,7 @@ class AuthController extends BaseController
 
         $destinations = [
             'employee' => BASE_URL . '/employee/dashboard',
-            'charity'  => BASE_URL . '/', // TODO: point at the charity dashboard once it's built
+            'charity'  => BASE_URL . '/charity/dashboard',
             'consumer' => BASE_URL . '/consumer/dashboard',
             'admin'    => BASE_URL . '/admin', // admins must sign in via the /admin form
         ];
@@ -516,6 +516,7 @@ class AuthController extends BaseController
         $back = [
             'employee' => '/employee/profile#recovery',
             'consumer' => '/consumer/profile#recovery',
+            'charity'  => '/charity/profile#recovery',
         ][$user['role']] ?? '/';
 
         if (!password_verify((string) ($_POST['current_password'] ?? ''), $user['password_hash'])) {
@@ -604,10 +605,10 @@ class AuthController extends BaseController
         $this->redirect('/recovery-code');
     }
 
-    /** The Consumer module reads a different flash shape than the rest of the app. */
+    /** The Consumer and Charity pages read a different flash shape than the rest of the app. */
     private function flashFor(string $role, string $type, string $message): void
     {
-        if ($role === 'consumer') {
+        if (in_array($role, ['consumer', 'charity'], true)) {
             Session::set('flash', ['type' => $type, 'message' => $message]);
         } else {
             Session::flash($type, $message);

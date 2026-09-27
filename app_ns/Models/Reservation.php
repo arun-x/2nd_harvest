@@ -69,6 +69,16 @@ class Reservation extends BaseModel
         return (int)($stmt->fetch()['c'] ?? 0);
     }
 
+    public function countActiveByUser(int $userId): int
+    {
+        $stmt = $this->db->prepare(
+            "SELECT COUNT(*) AS c FROM reservations
+             WHERE user_id = :uid AND status = 'active'"
+        );
+        $stmt->execute(['uid' => $userId]);
+        return (int)($stmt->fetch()['c'] ?? 0);
+    }
+
     public function markCompleted(int $reservationId, float $collectedQty): void
     {
         $this->db->beginTransaction();

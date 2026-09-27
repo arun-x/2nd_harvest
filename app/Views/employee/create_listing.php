@@ -30,7 +30,7 @@ $breadcrumbs  = ['Outlet Dashboard', 'Create Listing'];
 $activeRoute  = 'employee.listings.create';
 $extraScripts = ['create-listing.js'];
 $pageActions = '
-  <a href="<?= BASE_URL ?>/employee/dashboard" class="btn btn-secondary">
+  <a href="' . BASE_URL . '/employee/dashboard" class="btn btn-secondary">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     Back
   </a>
@@ -107,11 +107,17 @@ function field_error($errors, $name) {
         <label class="field-label" for="best_before_date">Best Before / Expiry Date</label>
         <input
           class="input" type="date" id="best_before_date" name="best_before_date"
-          value="<?= htmlspecialchars($old['best_before_date'] ?? date('Y-m-d')) ?>"
+          value="<?= htmlspecialchars($old['best_before_date'] ?? $postingDate) ?>"
           readonly
         >
         <div class="field-hint">
-          Listings are limited to today. Pickup slots run every 30 minutes until the store closes at 10:30 PM.
+          <?php if (($postingDate ?? date('Y-m-d')) > date('Y-m-d')): ?>
+            It's after 7:00 PM, so this listing is for <strong>tomorrow, <?= date('D, M j', strtotime($postingDate)) ?></strong>. It shows on the marketplace now as "Coming Tomorrow" and can be reserved tomorrow.
+          <?php else: ?>
+            Listings posted before 7:00 PM are for today. After that, new listings are for tomorrow.
+          <?php endif; ?>
+          Anything not reserved by 10:30 PM on the listing's day is removed automatically.
+          Pickup slots run every 30 minutes from 7:00 PM until the store closes at 10:30 PM.
         </div>
         <?= field_error($errors, 'best_before') ?>
       </div>

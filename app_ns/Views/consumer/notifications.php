@@ -11,6 +11,7 @@ $typeMap = [
     'reservation_cancelled'      => ['x',     'status-cancelled', 'Cancelled'],
     'pickup_confirmed'           => ['check', 'status-collected', 'Pickup'],
     'pickup_completed_by_outlet' => ['check', 'status-collected', 'Collected at outlet'],
+    'reservation_expired'        => ['x',     'status-expired',   'Missed pickup'],
 ];
 
 $relative = function (string $iso): string {
@@ -49,7 +50,7 @@ $relative = function (string $iso): string {
   <div class="empty-state">
     <h3>No notifications yet</h3>
     <p>When you reserve items, cancel an order, or confirm a pickup, you'll see those updates here.</p>
-    <a href="<?= $base ?>/consumer/listings" class="btn btn-primary" style="margin-top:14px;">Browse marketplace</a>
+    <a href="<?= $base . ($homePath ?? '/consumer/listings') ?>" class="btn btn-primary" style="margin-top:14px;"><?= htmlspecialchars($homeLabel ?? 'Browse marketplace') ?></a>
   </div>
 <?php else: ?>
   <div class="order-list">

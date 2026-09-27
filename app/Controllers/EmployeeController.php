@@ -9,6 +9,28 @@ require_once __DIR__ . '/BaseController.php';
  
 class EmployeeController extends BaseController
 {
+    /**
+     * Every page here is for supermarket staff only. Signed-out visitors go
+     * to /login; anyone signed in with another role goes to their own home.
+     */
+    public function __construct()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            header('Location: ' . BASE_URL . '/login');
+            exit;
+        }
+        if ($user->role !== 'employee') {
+            $home = [
+                'consumer' => '/consumer/dashboard',
+                'charity'  => '/charity/dashboard',
+                'admin'    => '/admin/dashboard',
+            ][$user->role] ?? '/';
+            header('Location: ' . BASE_URL . $home);
+            exit;
+        }
+    }
+
     public function dashboard(): void
     {
         $user = Auth::user();
@@ -20,7 +42,8 @@ class EmployeeController extends BaseController
         // expiring badges no longer apply.
         $today = date('Y-m-d');
         $allInventory = array_map(function ($r) use ($today) {
-            $viewStatus = ($r['expiry_date'] === $today) ? 'active' : 'expired';
+            // Tomorrow's listings (posted after 7 PM) count as active too.
+            $viewStatus = ($r['expiry_date'] >= $today) ? 'active' : 'expired';
 
             $totalKg      = (float) $r['quantity_kg'];
             $remainingKg  = (float) ($r['quantity_remaining_kg'] ?? $r['quantity_kg']);
@@ -206,13 +229,8 @@ class EmployeeController extends BaseController
  
     public function createListing(): void
     {
-        if ((int) date('H') * 60 + (int) date('i') >= 19 * 60) {
-            Session::flash('error', 'The 7:00 PM posting deadline has passed. New listings resume tomorrow.');
-            header('Location: ' . BASE_URL . '/employee/dashboard');
-            exit;
-        }
-
-        $categories = $this->listingCategories();
+        $postingDate = $this->postingDate();
+        $categories  = $this->listingCategories();
  
         // Repopulate the form after a failed POST (see storeListing()),
         // or start blank on a normal GET visit.
@@ -230,23 +248,18 @@ class EmployeeController extends BaseController
  
     public function storeListing(): void
     {
-        // Standard: all listings must be posted before the 7:00 PM charity
-        // priority window begins. After 7 PM, block new listings entirely.
-        if ((int) date('H') * 60 + (int) date('i') >= 19 * 60) {
-            Session::flash('error', 'The 7:00 PM posting deadline has passed. New listings resume tomorrow.');
-            header('Location: ' . BASE_URL . '/employee/dashboard');
-            exit;
-        }
+        // Listings posted before 7:00 PM are for today; after that they're
+        // for tomorrow and show as "Coming Tomorrow" (see postingDate()).
+        $postingDate = $this->postingDate();
 
-        // Standard rule: listings are for today only, and the claim deadline
-        // is fixed to the store's close time (10:30 PM). Ignore any date/time
-        // posted from the form — we no longer accept those from the user.
+        // The claim deadline is fixed to the store's close time (10:30 PM).
+        // Ignore any date/time posted from the form; we don't accept those.
         $input = [
             'listing_title'    => trim($_POST['listing_title'] ?? ''),
             'category'         => trim($_POST['category'] ?? ''),
             'quantity'         => trim($_POST['quantity'] ?? ''),
             'reference_price'  => trim($_POST['reference_price'] ?? ''),
-            'best_before_date' => date('Y-m-d'),
+            'best_before_date' => $postingDate,
             'best_before_time' => '22:30',
             'pickup_location'  => '-',
         ];
@@ -284,7 +297,7 @@ class EmployeeController extends BaseController
             'claim_deadline'  => $input['best_before_date'] . ' ' . $input['best_before_time'] . ':00',
         ]);
 
-        $this->generatePickupSlots($listingId);
+        Listing::ensurePickupSlots($listingId, $postingDate);
 
         $expiresLabel = date(
             'M j, g:i A',
@@ -310,12 +323,7 @@ class EmployeeController extends BaseController
     public function editListing(string $id): void
     {
         $id = (int) $id;
-        $listing = Listing::find($id);
-        if (!$listing) {
-            Session::flash('error', 'Listing not found.');
-            header('Location: ' . BASE_URL . '/employee/dashboard');
-            exit;
-        }
+        $listing = $this->ownListingOrFail($id);
 
         $categories = $this->listingCategories();
 
@@ -324,7 +332,7 @@ class EmployeeController extends BaseController
             'category'         => $listing['category'] === 'fruit' ? 'fruits' : 'vegetables',
             'quantity'         => rtrim(rtrim($listing['quantity_kg'], '0'), '.'),
             'reference_price'  => rtrim(rtrim($listing['reference_price'] ?? '0', '0'), '.'),
-            'best_before_date' => $listing['expiry_date'],
+            'best_before_date' => $this->editDate($listing),
             'best_before_time' => date('H:i', strtotime($listing['claim_deadline'])),
             'pickup_location'  => '-',
         ]);
@@ -344,22 +352,18 @@ class EmployeeController extends BaseController
     public function updateListing(string $id): void
     {
         $id = (int) $id;
-        $listing = Listing::find($id);
-        if (!$listing) {
-            header('Location: ' . BASE_URL . '/employee/dashboard');
-            exit;
-        }
+        $listing = $this->ownListingOrFail($id);
 
-        // Same "today only" rule as storeListing: date + deadline are not
-        // user-editable; the deadline is pinned to today 22:30.
+        // Same rule as storeListing: date + deadline are not user-editable;
+        // the deadline is pinned to 22:30 on the listing's day (editDate()).
         $input = [
             'listing_title'    => trim($_POST['listing_title'] ?? ''),
             'category'         => trim($_POST['category'] ?? ''),
             'quantity'         => trim($_POST['quantity'] ?? ''),
             'reference_price'  => trim($_POST['reference_price'] ?? ''),
-            'best_before_date' => date('Y-m-d'),
+            'best_before_date' => $this->editDate($listing),
             'best_before_time' => '22:30',
-            'pickup_location'  => trim($_POST['pickup_location'] ?? '-'),
+            'pickup_location'  => '-', // column removed; kept so validateListing() passes
         ];
 
         $errors = $this->validateListing($input);
@@ -384,6 +388,10 @@ class EmployeeController extends BaseController
             'claim_deadline'  => $input['best_before_date'] . ' ' . $input['best_before_time'] . ':00',
         ]);
 
+        // An older listing is moved to today on edit, but its slots are
+        // still on its original date, so give it that day's pickup grid.
+        Listing::ensurePickupSlots((int) $id, $input['best_before_date']);
+
         Session::flash('success', 'Listing updated.');
         header('Location: ' . BASE_URL . '/employee/dashboard');
         exit;
@@ -391,6 +399,7 @@ class EmployeeController extends BaseController
 
     public function deleteListing(string $id): void
     {
+        $this->ownListingOrFail((int) $id);
         Listing::delete((int) $id);
         Session::flash('success', 'Listing deleted.');
         header('Location: ' . BASE_URL . '/employee/dashboard');
@@ -452,36 +461,32 @@ class EmployeeController extends BaseController
     }
  
     /**
-     * Generate the pickup-slot grid for a newly created listing.
-     *
-     * Every listing gets a fixed grid of seven 30-minute slots from
-     * 7:00 PM through 10:30 PM (store close):
-     *   19:00-19:30, 19:30-20:00, 20:00-20:30  (charity priority window)
-     *   20:30-21:00, 21:00-21:30, 21:30-22:00, 22:00-22:30  (both charities + consumers)
-     *
-     * Slot generation runs when the listing is created (before 7 PM per the
-     * daily posting cutoff), so the whole grid is always in the future.
-     * Capacity defaults to 1 per slot.
+     * The day a new listing is for. Before 7:00 PM it's today; from 7:00 PM
+     * the charity priority window has started, so it's tomorrow. Tomorrow's
+     * listings are visible straight away but only reservable on their day.
      */
-    private function generatePickupSlots(int $listingId): void
+    private function postingDate(): string
     {
-        $firstSlot = (new DateTime())->setTime(19, 0, 0);
-        $lastSlot  = (new DateTime())->setTime(22, 0, 0);
+        return date('H:i') < '19:00' ? date('Y-m-d') : date('Y-m-d', strtotime('+1 day'));
+    }
 
-        $db   = Database::connection();
-        $stmt = $db->prepare(
-            'INSERT INTO pickup_slots (listing_id, slot_start, slot_end, capacity, booked_count)
-             VALUES (:listing_id, :start, :end, 1, 0)'
-        );
+    /** A listing keeps its day when edited if that's today or later; older ones move to today. */
+    private function editDate(array $listing): string
+    {
+        $today = date('Y-m-d');
+        return $listing['expiry_date'] >= $today ? $listing['expiry_date'] : $today;
+    }
 
-        for ($slot = clone $firstSlot; $slot <= $lastSlot; $slot->modify('+30 minutes')) {
-            $slotEnd = (clone $slot)->modify('+30 minutes');
-            $stmt->execute([
-                ':listing_id' => $listingId,
-                ':start'      => $slot->format('Y-m-d H:i:s'),
-                ':end'        => $slotEnd->format('Y-m-d H:i:s'),
-            ]);
+    /** The listing, if it belongs to the signed-in staff member's outlet; otherwise back to the dashboard. */
+    private function ownListingOrFail(int $id): array
+    {
+        $listing = Listing::find($id);
+        if (!$listing || (int) $listing['outlet_id'] !== $this->outletIdForCurrentUser()) {
+            Session::flash('error', 'Listing not found.');
+            header('Location: ' . BASE_URL . '/employee/dashboard');
+            exit;
         }
+        return $listing;
     }
 
     private function outletIdForCurrentUser(): int

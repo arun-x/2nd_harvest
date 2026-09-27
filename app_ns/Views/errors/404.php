@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"><head>
-<meta charset="UTF-8"><title>404 — 2nd Harvest</title>
+<meta charset="UTF-8"><title>404 | 2nd Harvest</title>
 <link rel="stylesheet" href="<?= asset_url('css/style.css') ?>">
 </head><body>
 <section class="auth-shell">

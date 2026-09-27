@@ -28,7 +28,7 @@ $user = Auth::user() ?? null; // adjust to however app/Core/Auth.php exposes the
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= htmlspecialchars($pageTitle ?? '2nd Harvest') ?> · 2nd Harvest</title>
+  <title><?= htmlspecialchars($pageTitle ?? '2nd Harvest') ?> | 2nd Harvest</title>
   <?php $cssV = @filemtime(__DIR__ . '/../../../public/assets/css/style.css') ?: time(); ?>
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= $cssV ?>">
   <?php if (!empty($extraStylesheets)): foreach ($extraStylesheets as $sheet):

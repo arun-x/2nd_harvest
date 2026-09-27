@@ -126,5 +126,22 @@ $err = function (array $bag, string $key) {
         <button type="submit" class="btn btn-primary">Change password</button>
       </div>
     </form>
+
+    <form id="recovery" class="form-section" action="<?= BASE_URL ?>/account/recovery-code" method="post" novalidate>
+      <h2 class="form-section-title">Recovery Code</h2>
+      <p class="text-muted" style="font-size: var(--fs-sm); margin-top: -8px; margin-bottom: 16px;">
+        A recovery code lets you reset your password yourself if you forget it.
+        <?= empty($userRow['recovery_code_hash']) ? 'You don\'t have one yet, so generate one now.' : 'Generating a new code replaces your current one.' ?>
+      </p>
+
+      <div class="field">
+        <label class="field-label" for="recovery_current_password">Current Password</label>
+        <input class="input" type="password" id="recovery_current_password" name="current_password" required>
+      </div>
+
+      <div class="flex gap-3" style="margin-top: 16px;">
+        <button type="submit" class="btn btn-secondary">Generate new recovery code</button>
+      </div>
+    </form>
   </div>
 </div>

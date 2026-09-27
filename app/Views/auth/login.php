@@ -14,6 +14,7 @@
 $oldEmail   = $oldEmail   ?? '';
 $oldRole    = $oldRole    ?? 'supermarket';
 $loginError = $loginError ?? null;
+$flashes    = $flashes    ?? [];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -21,19 +22,24 @@ $loginError = $loginError ?? null;
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In — 2nd Harvest</title>
-  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
-  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/auth.css">
+  <link rel="stylesheet" href="<?= asset_url('css/style.css') ?>">
+  <link rel="stylesheet" href="<?= asset_url('css/auth.css') ?>">
 </head>
 <body>
   <div class="auth-shell">
  
     <div class="auth-brand">
-      <img src="<?= BASE_URL ?>/assets/images/logo.png" alt="2nd Harvest logo" class="auth-brand-logo">
+      <a href="<?= BASE_URL ?>/" aria-label="2nd Harvest home"><img src="<?= BASE_URL ?>/assets/images/logo.png" alt="2nd Harvest logo" class="auth-brand-logo"></a>
       <h1>2nd Harvest</h1>
       <p>Empowering communities through food rescue.</p>
     </div>
  
     <div class="auth-card">
+      <?php foreach ($flashes as $type => $message): ?>
+        <div class="alert-item <?= $type === 'error' ? 'danger' : 'success' ?> mb-4">
+          <div class="alert-item-title"><?= htmlspecialchars($message) ?></div>
+        </div>
+      <?php endforeach; ?>
       <?php if ($loginError): ?>
         <div class="alert-item danger mb-4">
           <div class="alert-item-title"><?= htmlspecialchars($loginError) ?></div>
@@ -112,8 +118,7 @@ $loginError = $loginError ?? null;
     <p class="auth-legal-link"><a href="<?= BASE_URL ?>/terms">Terms of Service</a> <span aria-hidden="true">|</span> <a href="<?= BASE_URL ?>/privacy">Privacy Policy</a></p>
  
     <p class="auth-footer-note">
-      &copy; <?= date('Y') ?> 2nd Harvest Food Rescue.<br>
-      Secure platform with 256-bit encryption.
+      &copy; <?= date('Y') ?> 2nd Harvest Food Rescue.
     </p>
  
   </div>

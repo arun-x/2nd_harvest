@@ -131,6 +131,9 @@ class AuthController extends BaseController
                 ]);
             }
 
+            [$recoveryCode, $recoveryHash] = Recovery::newRecoveryCode();
+            User::updateRecoveryCode($userId, $recoveryHash);
+
             $pdo->commit();
         } catch (Throwable $e) {
             $pdo->rollBack();
@@ -143,8 +146,7 @@ class AuthController extends BaseController
         Session::flash('success', $role === 'consumer'
             ? 'Account created! You can now log in.'
             : 'Account created! An administrator will verify your registration before you can log in.');
-        header('Location: ' . BASE_URL . '/login');
-        exit;
+        $this->showRecoveryCode($recoveryCode, 'register', '/login');
     }
  
     private function validateRegistration(string $role, array $input): array
@@ -186,7 +188,8 @@ class AuthController extends BaseController
         Session::forget('login_error');
         Session::forget('login_old_email');
         Session::forget('login_old_role');
- 
+        $flashes = Session::getFlash();
+
         require __DIR__ . '/../Views/auth/login.php';
     }
 
@@ -198,6 +201,11 @@ class AuthController extends BaseController
     public function privacy(): void
     {
         require __DIR__ . '/../Views/auth/privacy.php';
+    }
+
+    public function cookies(): void
+    {
+        require __DIR__ . '/../Views/auth/cookies.php';
     }
  
     public function authenticate(): void
@@ -306,6 +314,328 @@ class AuthController extends BaseController
         Session::forget('admin_csrf');
         Session::forget('admin_authenticated');
         header('Location: ' . BASE_URL . ($wasAdmin ? '/admin' : '/'));
+        exit;
+    }
+
+    // ---------------------------------------------------------------
+    // Forgot password (no email involved). Two ways to prove who you are:
+    //   1) the recovery code handed out at registration, or
+    //   2) a request an admin verifies and approves (Admin > Password
+    //      Resets); the user comes back with their email + request number.
+    // Either way, success puts a short-lived 'password_reset' grant in
+    // this session and sends the user to /reset-password.
+    // ---------------------------------------------------------------
+
+    public const APPROVAL_VALID_MINUTES = 60;   // how long an admin approval stays usable
+    private const RESET_WINDOW_SECONDS  = 900;  // time to finish the new-password form
+    private const MAX_FAILED_CHECKS     = 5;
+    private const LOCKOUT_SECONDS       = 900;
+    private const MAX_OPEN_REQUESTS     = 3;
+
+    public function forgotPassword(): void
+    {
+        $mode = in_array($_GET['mode'] ?? '', ['code', 'request', 'status'], true) ? $_GET['mode'] : 'code';
+
+        $error    = Session::get('forgot_error');
+        $notice   = Session::get('forgot_notice');
+        $oldEmail = Session::get('forgot_old_email', '');
+        $ticket   = Session::get('forgot_ticket'); // request number, shown once
+        foreach (['forgot_error', 'forgot_notice', 'forgot_old_email', 'forgot_ticket'] as $key) {
+            Session::forget($key);
+        }
+        $csrfToken = $this->authCsrfToken();
+
+        require __DIR__ . '/../Views/auth/forgot_password.php';
+    }
+
+    public function verifyRecoveryCode(): void
+    {
+        $this->verifyAuthCsrf('/forgot-password?mode=code');
+        $this->guardAttempts('code');
+
+        $email = trim($_POST['email'] ?? '');
+        $code  = trim($_POST['recovery_code'] ?? '');
+        if ($email === '' || $code === '') {
+            $this->forgotFail('code', 'Enter your email and recovery code.', $email, false);
+        }
+
+        $user = User::findByEmail($email);
+        if (!$user || !Recovery::verifyRecoveryCode($code, $user['recovery_code_hash'] ?? null)) {
+            $this->forgotFail('code', "That email and recovery code don't match.", $email);
+        }
+
+        $this->grantReset($user, null, 'code');
+    }
+
+    public function submitResetRequest(): void
+    {
+        $this->verifyAuthCsrf('/forgot-password?mode=request');
+
+        $email = trim($_POST['email'] ?? '');
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->forgotFail('request', 'Enter a valid email address.', $email, false);
+        }
+
+        [$number, $hash] = Recovery::newRequestNumber();
+
+        // Unknown emails get a request number too, so this form can't be used
+        // to find out who has an account. The cap stops anyone flooding the
+        // admin queue for one account.
+        $user = User::findByEmail($email);
+        if ($user && PasswordResetRequest::countOpenFor((int) $user['id']) < self::MAX_OPEN_REQUESTS) {
+            PasswordResetRequest::create((int) $user['id'], $hash, substr($number, -4));
+        }
+
+        Session::set('forgot_ticket', $number);
+        Session::set('forgot_old_email', $email);
+        $this->redirect('/forgot-password?mode=request');
+    }
+
+    public function checkResetRequest(): void
+    {
+        $this->verifyAuthCsrf('/forgot-password?mode=status');
+        $this->guardAttempts('status');
+
+        $email  = trim($_POST['email'] ?? '');
+        $number = trim($_POST['request_number'] ?? '');
+        if ($email === '' || $number === '') {
+            $this->forgotFail('status', 'Enter your email and request number.', $email, false);
+        }
+
+        $user    = User::findByEmail($email);
+        $request = $user ? PasswordResetRequest::findForUser((int) $user['id'], Recovery::requestHash($number)) : null;
+        if (!$request) {
+            $this->forgotFail('status', "We couldn't find a request with that email and request number.", $email);
+        }
+
+        if ($request['status'] === 'approved' && strtotime($request['approved_until']) < time()) {
+            PasswordResetRequest::setStatus((int) $request['id'], 'expired');
+            $request['status'] = 'expired';
+        }
+
+        switch ($request['status']) {
+            case 'approved':
+                $this->grantReset($user, (int) $request['id'], 'status');
+                // grantReset() redirects
+            case 'pending':
+                Session::set('forgot_notice', 'Your request is still waiting for an administrator. They may contact you to confirm your identity. Please check back later.');
+                Session::set('forgot_old_email', $email);
+                $this->redirect('/forgot-password?mode=status');
+            case 'rejected':
+                $reason = $request['reject_reason'] ? ' Reason: ' . $request['reject_reason'] : '';
+                $this->forgotFail('status', 'Your request was not approved.' . $reason, $email, false);
+            case 'completed':
+                $this->forgotFail('status', 'This request has already been used to reset your password.', $email, false);
+            case 'expired':
+                $this->forgotFail('status', 'The approval for this request has expired. Please submit a new request.', $email, false);
+            default: // cancelled
+                $this->forgotFail('status', 'This request is no longer active. Please submit a new request.', $email, false);
+        }
+    }
+
+    public function resetPassword(): void
+    {
+        $grant  = $this->resetGrant();
+        $user   = User::find($grant['user_id']);
+        $errors = Session::get('reset_errors', []);
+        $error  = Session::get('forgot_error');
+        Session::forget('reset_errors');
+        Session::forget('forgot_error');
+        $minutesLeft = max(1, (int) ceil(($grant['expires'] - time()) / 60));
+        $csrfToken   = $this->authCsrfToken();
+
+        require __DIR__ . '/../Views/auth/reset_password.php';
+    }
+
+    public function updateForgottenPassword(): void
+    {
+        $this->verifyAuthCsrf('/reset-password');
+        $grant = $this->resetGrant();
+
+        $next    = (string) ($_POST['new_password'] ?? '');
+        $confirm = (string) ($_POST['confirm_password'] ?? '');
+        $errors  = [];
+        if (strlen($next) < 8) {
+            $errors['new_password'] = 'Password must be at least 8 characters.';
+        }
+        if ($next !== $confirm) {
+            $errors['confirm_password'] = 'The passwords do not match.';
+        }
+        if ($errors) {
+            Session::set('reset_errors', $errors);
+            $this->redirect('/reset-password');
+        }
+
+        $userId = $grant['user_id'];
+        $user   = User::find($userId);
+
+        User::updatePassword($userId, password_hash($next, PASSWORD_DEFAULT));
+        if ($grant['request_id']) {
+            PasswordResetRequest::setStatus($grant['request_id'], 'completed');
+        }
+        PasswordResetRequest::cancelOpenFor($userId);
+
+        // The old recovery code may have just been used, so always issue a fresh one.
+        [$code, $hash] = Recovery::newRecoveryCode();
+        User::updateRecoveryCode($userId, $hash);
+
+        Notification::send($userId, 'Your 2nd Harvest password was reset. If this wasn\'t you, contact support immediately.', 'password_reset');
+        AuditLog::record(
+            $userId,
+            $grant['request_id'] ? 'password.reset_admin_approved' : 'password.reset_recovery_code',
+            'user',
+            $userId
+        );
+
+        Session::forget('password_reset');
+        Session::flash('success', 'Your password has been changed. You can now log in.');
+        $this->showRecoveryCode($code, 'reset', $user && $user['role'] === 'admin' ? '/admin' : '/login');
+    }
+
+    /** One-time display of a freshly issued recovery code. */
+    public function recoveryCode(): void
+    {
+        $display = Session::get('recovery_code_display');
+        if (!$display) {
+            $this->redirect('/login');
+        }
+        Session::forget('recovery_code_display');
+
+        require __DIR__ . '/../Views/auth/recovery_code.php';
+    }
+
+    /** Signed-in users (e.g. accounts created before recovery codes existed) can issue a new code. */
+    public function regenerateRecoveryCode(): void
+    {
+        $userId = (int) Session::get('user_id', 0);
+        $user   = $userId ? User::find($userId) : null;
+        if (!$user) {
+            $this->redirect('/login');
+        }
+
+        $back = [
+            'employee' => '/employee/profile#recovery',
+            'consumer' => '/consumer/profile#recovery',
+        ][$user['role']] ?? '/';
+
+        if (!password_verify((string) ($_POST['current_password'] ?? ''), $user['password_hash'])) {
+            $this->flashFor($user['role'], 'error', 'Current password is incorrect. Your recovery code was not changed.');
+            $this->redirect($back);
+        }
+
+        [$code, $hash] = Recovery::newRecoveryCode();
+        User::updateRecoveryCode($userId, $hash);
+        AuditLog::record($userId, 'recovery_code.regenerated', 'user', $userId);
+
+        $this->showRecoveryCode($code, 'regenerate', $back);
+    }
+
+    // ---------------------------------------------------------------
+    // Forgot-password helpers
+    // ---------------------------------------------------------------
+
+    private function grantReset(array $user, ?int $requestId, string $mode): void
+    {
+        if ($user['status'] === 'locked') {
+            $this->forgotFail($mode, 'This account has been locked. Please contact support.', $user['email'], false);
+        }
+
+        Session::forget('forgot_attempts');
+        session_regenerate_id(true);
+        Session::set('password_reset', [
+            'user_id'    => (int) $user['id'],
+            'request_id' => $requestId,
+            'expires'    => time() + self::RESET_WINDOW_SECONDS,
+        ]);
+        $this->redirect('/reset-password');
+    }
+
+    /** @return array{user_id:int,request_id:?int,expires:int} */
+    private function resetGrant(): array
+    {
+        $grant = Session::get('password_reset');
+        if (!$grant || $grant['expires'] < time()) {
+            Session::forget('password_reset');
+            Session::set('forgot_error', 'Your reset session has expired. Please verify your identity again.');
+            $this->redirect('/forgot-password');
+        }
+        return $grant;
+    }
+
+    /**
+     * Failed code / request-number checks are counted per session; after
+     * MAX_FAILED_CHECKS the forms refuse further checks for a while.
+     */
+    private function guardAttempts(string $mode): void
+    {
+        $attempts = Session::get('forgot_attempts');
+        if (!$attempts) {
+            return;
+        }
+        $wait = $attempts['since'] + self::LOCKOUT_SECONDS - time();
+        if ($wait <= 0) {
+            Session::forget('forgot_attempts');
+            return;
+        }
+        if ($attempts['count'] >= self::MAX_FAILED_CHECKS) {
+            $this->forgotFail($mode, 'Too many attempts. Please try again in ' . (int) ceil($wait / 60) . ' minutes.', trim($_POST['email'] ?? ''), false);
+        }
+    }
+
+    private function forgotFail(string $mode, string $message, string $email, bool $countAttempt = true): void
+    {
+        if ($countAttempt) {
+            $attempts = Session::get('forgot_attempts', ['count' => 0, 'since' => time()]);
+            $attempts['count']++;
+            Session::set('forgot_attempts', $attempts);
+        }
+        Session::set('forgot_error', $message);
+        Session::set('forgot_old_email', $email);
+        $this->redirect('/forgot-password?mode=' . $mode);
+    }
+
+    private function showRecoveryCode(string $code, string $context, string $next): void
+    {
+        Session::set('recovery_code_display', [
+            'code'    => $code,
+            'context' => $context, // 'register' | 'reset' | 'regenerate'
+            'next'    => BASE_URL . $next,
+        ]);
+        $this->redirect('/recovery-code');
+    }
+
+    /** The Consumer module reads a different flash shape than the rest of the app. */
+    private function flashFor(string $role, string $type, string $message): void
+    {
+        if ($role === 'consumer') {
+            Session::set('flash', ['type' => $type, 'message' => $message]);
+        } else {
+            Session::flash($type, $message);
+        }
+    }
+
+    private function authCsrfToken(): string
+    {
+        $token = Session::get('auth_csrf');
+        if (!$token) {
+            $token = bin2hex(random_bytes(32));
+            Session::set('auth_csrf', $token);
+        }
+        return $token;
+    }
+
+    private function verifyAuthCsrf(string $back): void
+    {
+        $sent = $_POST['_csrf'] ?? '';
+        if (!is_string($sent) || !hash_equals($this->authCsrfToken(), $sent)) {
+            Session::set('forgot_error', 'Your session expired. Please try again.');
+            $this->redirect($back);
+        }
+    }
+
+    private function redirect(string $path): void
+    {
+        header('Location: ' . BASE_URL . $path);
         exit;
     }
 }

@@ -525,3 +525,95 @@
   color: var(--color-text-muted);
   cursor: default;
 }
+
+/* --------------------------------------------------------------------------
+   Forgot password / reset password / recovery code pages
+   -------------------------------------------------------------------------- */
+.auth-card-narrow {
+  max-width: 520px;
+}
+
+.alert-item.success {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.alert-item.info {
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+}
+
+.auth-tabs {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  margin-bottom: var(--space-6);
+  background: var(--color-neutral-bg);
+  border-radius: var(--radius-md);
+}
+
+.auth-tab {
+  flex: 1;
+  text-align: center;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.auth-tab:hover {
+  color: var(--color-primary-dark);
+}
+
+.auth-tab.active {
+  background: var(--color-surface);
+  color: var(--color-primary-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-help {
+  color: var(--color-text-secondary);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  margin-bottom: var(--space-5);
+}
+
+.auth-alt-link {
+  display: block;
+  text-align: center;
+  margin-top: var(--space-4);
+  font-size: var(--fs-sm);
+}
+
+.code-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-5);
+  margin: var(--space-4) 0;
+  border: 2px dashed var(--color-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-lighter);
+}
+
+.code-box-value {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-primary-darker);
+  word-break: break-all;
+}
+
+.code-input {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 520px) {
+  .auth-tabs { flex-direction: column; }
+}

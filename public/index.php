@@ -20,6 +20,14 @@ if (!defined('BASE_URL')) {
     define('BASE_URL', rtrim($__base, '/'));
 }
 
+// asset_url('css/style.css') -> /.../assets/css/style.css?v=<last modified time>,
+// so browsers download a stylesheet again as soon as it changes.
+function asset_url(string $path): string
+{
+    $version = @filemtime(__DIR__ . '/assets/' . $path) ?: 0;
+    return BASE_URL . '/assets/' . $path . ($version ? '?v=' . $version : '');
+}
+
 // 2) Malinka's non-namespaced core + auth stack
 require __DIR__ . '/../app/Core/Router.php';
 require __DIR__ . '/../app/Core/Session.php';
@@ -35,7 +43,10 @@ require __DIR__ . '/../app/Models/Notification.php';
 require __DIR__ . '/../app/Models/AuditLog.php';
 require __DIR__ . '/../app/Models/Dispute.php';
 require __DIR__ . '/../app/Models/Report.php';
+require __DIR__ . '/../app/Models/PasswordResetRequest.php';
+require __DIR__ . '/../app/Models/ContactMessage.php';
 require __DIR__ . '/../app/Core/Auth.php';
+require __DIR__ . '/../app/Core/Recovery.php';
 require __DIR__ . '/../app/Controllers/BaseController.php';
 require __DIR__ . '/../app/Controllers/HomeController.php';
 require __DIR__ . '/../app/Controllers/AuthController.php';
@@ -53,6 +64,8 @@ $router->setBasePath(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])));
 // Public
 // -------------------------------------------------------------
 $router->get('/', [HomeController::class, 'index']);
+$router->get ('/contact', [HomeController::class, 'contact']);
+$router->post('/contact', [HomeController::class, 'submitContact']);
 
 // -------------------------------------------------------------
 // Auth (Malinka's AuthController — on success it populates BOTH
@@ -66,8 +79,19 @@ $router->post('/register',              [AuthController::class, 'store']);
 $router->get ('/login',                 [AuthController::class, 'login']);
 $router->get ('/terms',                 [AuthController::class, 'terms']);
 $router->get ('/privacy',               [AuthController::class, 'privacy']);
+$router->get ('/cookies',               [AuthController::class, 'cookies']);
 $router->post('/login',                 [AuthController::class, 'authenticate']);
 $router->post('/logout',                [AuthController::class, 'logout']);
+
+// Forgot password: recovery code, or an admin-approved request (no email)
+$router->get ('/forgot-password',         [AuthController::class, 'forgotPassword']);
+$router->post('/forgot-password/code',    [AuthController::class, 'verifyRecoveryCode']);
+$router->post('/forgot-password/request', [AuthController::class, 'submitResetRequest']);
+$router->post('/forgot-password/status',  [AuthController::class, 'checkResetRequest']);
+$router->get ('/reset-password',          [AuthController::class, 'resetPassword']);
+$router->post('/reset-password',          [AuthController::class, 'updateForgottenPassword']);
+$router->get ('/recovery-code',           [AuthController::class, 'recoveryCode']);
+$router->post('/account/recovery-code',   [AuthController::class, 'regenerateRecoveryCode']);
 
 // -------------------------------------------------------------
 // Admin portal — only reachable via /admin (not linked from /login)
@@ -78,6 +102,12 @@ $router->get ('/admin/dashboard',                     [AdminController::class, '
 $router->get ('/admin/registrations',                 [AdminController::class, 'registrations']);
 $router->post('/admin/registrations/{id}/approve',    [AdminController::class, 'approveRegistration']);
 $router->post('/admin/registrations/{id}/reject',     [AdminController::class, 'rejectRegistration']);
+$router->get ('/admin/password-resets',               [AdminController::class, 'passwordResets']);
+$router->post('/admin/password-resets/{id}/approve',  [AdminController::class, 'approvePasswordReset']);
+$router->post('/admin/password-resets/{id}/reject',   [AdminController::class, 'rejectPasswordReset']);
+$router->get ('/admin/messages',                      [AdminController::class, 'messages']);
+$router->post('/admin/messages/{id}/read',            [AdminController::class, 'markMessageRead']);
+$router->post('/admin/messages/{id}/unread',          [AdminController::class, 'markMessageUnread']);
 $router->get ('/admin/listings',                      [AdminController::class, 'listings']);
 $router->post('/admin/listings/{id}/remove',          [AdminController::class, 'removeListing']);
 $router->post('/admin/listings/{id}/restore',         [AdminController::class, 'restoreListing']);

@@ -74,6 +74,18 @@ $sections = [
         'icon'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>',
       ],
       [
+        'route' => 'admin.password_resets',
+        'label' => 'Password Resets',
+        'href'  => BASE_URL . '/admin/password-resets',
+        'icon'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>',
+      ],
+      [
+        'route' => 'admin.messages',
+        'label' => 'Messages',
+        'href'  => BASE_URL . '/admin/messages',
+        'icon'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 6 12 13 2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg>',
+      ],
+      [
         'route' => 'admin.listings',
         'label' => 'Listings',
         'href'  => BASE_URL . '/admin/listings',

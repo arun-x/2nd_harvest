@@ -18,6 +18,23 @@ body.landing {
   justify-content: space-between;
   padding: var(--space-4) var(--space-8);
   border-bottom: 1px solid var(--color-border);
+  /* Stays pinned to the top while the page scrolls. */
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.92);
+  -webkit-backdrop-filter: saturate(180%) blur(10px);
+  backdrop-filter: saturate(180%) blur(10px);
+}
+
+/* Anchor links (#impact, #process...) land below the pinned nav, not under it. */
+html:has(body.landing) {
+  scroll-padding-top: 96px;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:has(body.landing) { scroll-behavior: auto; }
 }
 
 .public-nav-logo {
@@ -285,7 +302,7 @@ body.landing {
 .cta-banner-inner h2 {
   color: var(--color-text-inverse);
   font-size: var(--fs-2xl);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-5); /* sits directly above the buttons */
 }
 
 .cta-banner-inner p {
@@ -386,4 +403,433 @@ body.landing {
   .partner-grid { grid-template-columns: 1fr; }
   .public-nav-links { display: none; }
   .public-footer-inner { flex-direction: column; }
+}
+
+/* --------------------------------------------------------------------------
+   Contact Us page (/contact)
+   -------------------------------------------------------------------------- */
+.contact-page {
+  background: linear-gradient(180deg, var(--color-primary-lighter) 0, var(--color-surface) 420px);
+  padding: 64px var(--space-8) 80px;
+}
+
+.contact-header {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto 48px;
+}
+
+.contact-eyebrow {
+  display: inline-block;
+  padding: var(--space-1) var(--space-3);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-full);
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.contact-header h1 {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  color: var(--color-primary-darker);
+  line-height: 1.2;
+  margin-bottom: var(--space-3);
+}
+
+.contact-header p {
+  color: var(--color-text-secondary);
+  font-size: var(--fs-md);
+  line-height: 1.6;
+}
+
+.contact-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 8fr);
+  gap: var(--space-6);
+  max-width: 1120px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+/* Dark info panel, same tone as the homepage CTA banner */
+.contact-aside {
+  background: #232b26;
+  color: var(--color-text-inverse);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+}
+
+.contact-aside h2 {
+  color: var(--color-text-inverse);
+  font-size: var(--fs-xl);
+  margin-bottom: var(--space-6);
+}
+
+.contact-topics,
+.contact-steps ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.contact-topics {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.contact-topics li {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.contact-topics strong {
+  display: block;
+  font-size: var(--fs-md);
+  margin-bottom: 2px;
+}
+
+.contact-topics span:not(.contact-topic-icon) {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+.contact-topic-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.contact-steps {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.contact-steps h3 {
+  color: var(--color-text-inverse);
+  font-size: var(--fs-md);
+  margin-bottom: var(--space-4);
+}
+
+.contact-steps ol {
+  counter-reset: step;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.contact-steps li {
+  counter-increment: step;
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: var(--fs-sm);
+}
+
+.contact-steps li::before {
+  content: counter(step);
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Form card */
+.contact-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-8);
+}
+
+.contact-card-title {
+  font-size: var(--fs-xl);
+  margin-bottom: var(--space-1);
+}
+
+.contact-card-sub {
+  color: var(--color-text-secondary);
+  font-size: var(--fs-sm);
+  margin-bottom: var(--space-6);
+}
+
+.contact-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+}
+
+.contact-form .input {
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+  font-size: var(--fs-md);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.contact-form .input:hover {
+  border-color: var(--color-border-strong);
+}
+
+.contact-form .input:focus {
+  border-color: var(--color-primary);
+}
+
+.contact-form .input[aria-invalid="true"] {
+  border-color: var(--color-danger-text);
+  background: #fffafa;
+}
+
+.contact-form .input[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 3px var(--color-danger-bg);
+}
+
+.contact-textarea {
+  min-height: 160px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.contact-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.contact-counter {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.contact-req {
+  color: var(--color-danger-text);
+}
+
+.contact-optional {
+  margin-left: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+}
+
+.contact-error {
+  margin-top: var(--space-1);
+  color: var(--color-danger-text);
+  font-size: var(--fs-sm);
+}
+
+.contact-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-top: var(--space-2);
+}
+
+.contact-privacy {
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+}
+
+.contact-privacy a {
+  color: var(--color-primary-dark);
+  font-weight: 600;
+}
+
+.contact-submit {
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  padding-left: var(--space-8);
+  padding-right: var(--space-8);
+}
+
+.contact-submit:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+/* Success state */
+.contact-success {
+  text-align: center;
+  padding: var(--space-8) 0;
+}
+
+.contact-success-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--space-5);
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.contact-success h2 {
+  font-size: var(--fs-2xl);
+  color: var(--color-primary-darker);
+  margin-bottom: var(--space-2);
+}
+
+.contact-success p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-6);
+}
+
+.contact-success-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .contact-layout { grid-template-columns: 1fr; }
+  .contact-card { order: -1; }
+}
+
+@media (max-width: 600px) {
+  .contact-page { padding: 40px var(--space-4) 56px; }
+  .contact-card,
+  .contact-aside { padding: var(--space-6) var(--space-5); }
+  .contact-row { grid-template-columns: 1fr; gap: 0; }
+  .contact-actions { flex-direction: column-reverse; align-items: stretch; text-align: center; }
+  .contact-submit { width: 100%; justify-content: center; }
+}
+
+.contact-page h1,
+.contact-page h2,
+.contact-page h3 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.contact-header h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  letter-spacing: -0.03em;
+}
+
+/* --------------------------------------------------------------------------
+   "From Surplus to Saved in 3 Steps" (#process)
+   -------------------------------------------------------------------------- */
+.process-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-8) var(--space-10);
+}
+
+.process-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 64px;
+  background: #2d3139;
+  border-radius: 24px;
+}
+
+.process-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.process-section h2,
+.process-section h3,
+.process-badge {
+  font-family: var(--font-display);
+  font-weight: 700; /* 800 would render as Segoe UI Black, far heavier than the design */
+  color: #ffffff;
+}
+
+.process-header h2 {
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  line-height: 1.375;
+  letter-spacing: -0.01em;
+}
+
+.process-header p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #ebf7ed;
+}
+
+.process-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.process-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 24px;
+  background: #3a4048;
+  border-radius: 16px;
+}
+
+.process-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  background: #ffffff;
+  color: var(--color-primary);
+  font-size: 14px;
+  line-height: 19px;
+}
+
+.process-step h3 {
+  font-size: 18px;
+  line-height: 25px;
+}
+
+.process-step p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #ebf7ed;
+}
+
+@media (max-width: 900px) {
+  .process-panel { padding: 40px 28px; }
+  .process-steps { grid-template-columns: 1fr; gap: 16px; }
+}
+
+@media (max-width: 600px) {
+  .process-section { padding: var(--space-6) var(--space-4) var(--space-8); }
+  .process-panel { padding: 32px 20px; border-radius: 20px; }
 }

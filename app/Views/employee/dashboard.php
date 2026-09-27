@@ -249,11 +249,6 @@ $statusBadgeClass = [
           <?php endif; ?>
         </tbody>
       </table>
- 
-      <div class="sync-status">
-        <span>Showing <?= count($inventory) ?> of <?= (int) $activeListingsTotal ?> active listings</span>
-        <a href="<?= BASE_URL ?>/employee/listings" class="font-semibold text-primary">View all inventory &rsaquo;</a>
-      </div>
     </section>
  
     <div class="quick-actions-grid">

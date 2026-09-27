@@ -111,6 +111,16 @@ class AdminController extends BaseController
                 'href'  => '/admin/registrations',
             ];
         }
+        foreach (PasswordResetRequest::adminList(['status' => 'pending']) as $r) {
+            $queue[] = [
+                'dot'   => 'orange',
+                'title' => $r['outlet_name'] ?: ($r['org_name'] ?: $r['full_name']),
+                'type'  => 'Password Reset',
+                'desc'  => 'Lost recovery code, verify identity',
+                'when'  => $r['created_at'],
+                'href'  => '/admin/password-resets',
+            ];
+        }
         foreach ($openDisputes as $d) {
             $queue[] = [
                 'dot'   => 'blue',
@@ -195,6 +205,110 @@ class AdminController extends BaseController
         AuditLog::record($admin->id, 'registration.rejected', 'user', (int) $id);
 
         $this->back('/admin/registrations', 'success', $user['full_name'] . ' has been rejected.');
+    }
+
+    // ---------------------------------------------------------------
+    // Password resets: "I lost my recovery code" requests. The admin
+    // confirms the requester's identity outside the platform (phone,
+    // registration number, last 4 characters of the request number),
+    // then approves; the user finishes the reset themselves.
+    // ---------------------------------------------------------------
+
+    public function passwordResets(): void
+    {
+        $this->requireAdmin();
+        PasswordResetRequest::expireStale();
+
+        $statuses = ['pending', 'approved', 'completed', 'rejected', 'expired', 'cancelled'];
+        $filters = [
+            'status' => in_array($_GET['status'] ?? '', $statuses, true) ? $_GET['status'] : 'pending',
+            'q'      => trim($_GET['q'] ?? ''),
+        ];
+        $rows   = PasswordResetRequest::adminList($filters);
+        $counts = PasswordResetRequest::counts();
+        $approvalMinutes = AuthController::APPROVAL_VALID_MINUTES;
+
+        $this->render('admin/password_resets', compact('rows', 'counts', 'filters', 'approvalMinutes'));
+    }
+
+    public function approvePasswordReset(string $id): void
+    {
+        $admin = $this->requireAdmin();
+        $this->verifyCsrf();
+
+        $request = PasswordResetRequest::find((int) $id);
+        if (!$request || $request['status'] !== 'pending') {
+            $this->back('/admin/password-resets', 'error', 'That request is no longer pending.');
+        }
+        if ((int) $request['user_id'] === $admin->id) {
+            $this->back('/admin/password-resets', 'error', 'Another administrator must approve a reset of your own account.');
+        }
+
+        PasswordResetRequest::approve((int) $id, $admin->id, AuthController::APPROVAL_VALID_MINUTES);
+        AuditLog::record($admin->id, 'password_reset.approved', 'password_reset_request', (int) $id);
+
+        $user = User::find((int) $request['user_id']);
+        $this->back('/admin/password-resets', 'success',
+            'Approved. ' . ($user['full_name'] ?? 'The user') . ' can now set a new password from "Check my request" within '
+            . AuthController::APPROVAL_VALID_MINUTES . ' minutes.');
+    }
+
+    public function rejectPasswordReset(string $id): void
+    {
+        $admin = $this->requireAdmin();
+        $this->verifyCsrf();
+
+        $reason = trim($_POST['reason'] ?? '');
+        if ($reason === '') {
+            $this->back('/admin/password-resets', 'error', 'A reason is required to reject a request.');
+        }
+
+        $request = PasswordResetRequest::find((int) $id);
+        if (!$request || $request['status'] !== 'pending') {
+            $this->back('/admin/password-resets', 'error', 'That request is no longer pending.');
+        }
+
+        PasswordResetRequest::reject((int) $id, $admin->id, $reason);
+        AuditLog::record($admin->id, 'password_reset.rejected', 'password_reset_request', (int) $id);
+
+        $this->back('/admin/password-resets', 'success', 'Request rejected.');
+    }
+
+    // ---------------------------------------------------------------
+    // Messages from the public Contact Us page
+    // ---------------------------------------------------------------
+
+    public function messages(): void
+    {
+        $this->requireAdmin();
+
+        $filters = [
+            'status' => in_array($_GET['status'] ?? '', ['new', 'read'], true) ? $_GET['status'] : 'new',
+            'q'      => trim($_GET['q'] ?? ''),
+        ];
+        $rows   = ContactMessage::adminList($filters);
+        $counts = ContactMessage::counts();
+
+        $this->render('admin/messages', compact('rows', 'counts', 'filters'));
+    }
+
+    public function markMessageRead(string $id): void
+    {
+        $admin = $this->requireAdmin();
+        $this->verifyCsrf();
+
+        ContactMessage::setStatus((int) $id, 'read');
+        AuditLog::record($admin->id, 'contact_message.read', 'contact_message', (int) $id);
+        $this->back('/admin/messages', 'success', 'Message marked as read.');
+    }
+
+    public function markMessageUnread(string $id): void
+    {
+        $admin = $this->requireAdmin();
+        $this->verifyCsrf();
+
+        ContactMessage::setStatus((int) $id, 'new');
+        $this->back('/admin/messages?status=read', 'success', 'Message moved back to New.');
     }
 
     // ---------------------------------------------------------------
@@ -572,6 +686,8 @@ class AdminController extends BaseController
         $csrfToken   = $this->csrfToken();
         $adminBadges = [
             'admin.registrations' => User::statusCounts(['employee', 'charity', 'consumer'])['pending'],
+            'admin.password_resets' => PasswordResetRequest::counts()['pending'],
+            'admin.messages'        => ContactMessage::counts()['new'],
             'admin.disputes'      => array_sum(array_intersect_key(Dispute::counts(), ['open' => 1, 'pending_info' => 1])),
         ];
         $searchAction      = BASE_URL . '/admin/listings';

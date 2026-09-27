@@ -37,8 +37,8 @@ function reg_error($errors, $key) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= $role ? 'Register your ' . ucfirst($role) : 'Create Your Account' ?> — 2nd Harvest</title>
-  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
-  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/auth.css">
+  <link rel="stylesheet" href="<?= asset_url('css/style.css') ?>">
+  <link rel="stylesheet" href="<?= asset_url('css/auth.css') ?>">
 </head>
 <body>
   <div class="auth-shell">
@@ -47,7 +47,7 @@ function reg_error($errors, $key) {
  
       <!-- ================= Role selection (no role chosen yet) ================= -->
       <div class="auth-brand">
-        <img src="<?= BASE_URL ?>/assets/images/logo.png" alt="2nd Harvest logo" class="auth-brand-logo">
+        <a href="<?= BASE_URL ?>/" aria-label="2nd Harvest home"><img src="<?= BASE_URL ?>/assets/images/logo.png" alt="2nd Harvest logo" class="auth-brand-logo"></a>
         <h1>2nd Harvest</h1>
       </div>
  

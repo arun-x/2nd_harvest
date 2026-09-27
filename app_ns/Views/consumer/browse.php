@@ -35,7 +35,6 @@ $expiryLabel = function (string $ymd): string {
 
 <section class="page-header">
   <h1>Food Marketplace</h1>
-  <p class="lede">Rescue fresh food at significant discounts from your favorite local outlets.</p>
 </section>
 
 <div class="filter-row">
@@ -96,16 +95,6 @@ $expiryLabel = function (string $ymd): string {
   <a href="?category=fruit<?= $locationSet ? '&address=' . urlencode($address) . '&lat=' . $lat . '&lng=' . $lng : '' ?>"      class="<?= $selectedCategory === 'fruit'      ? 'is-active' : '' ?>">Fruits</a>
   <a href="?category=vegetable<?= $locationSet ? '&address=' . urlencode($address) . '&lat=' . $lat . '&lng=' . $lng : '' ?>"  class="<?= $selectedCategory === 'vegetable'  ? 'is-active' : '' ?>">Vegetables</a>
 </nav>
-
-<div class="info-banner">
-  <div>
-    <h2 class="info-banner-title">How 2nd Harvest Works</h2>
-    <p class="info-banner-body">
-      Outlets list their surplus stock here. Reserve items online and pick them up within the specified time.
-      Pre-payment is simulated at checkout and recorded on your reservation, then confirmed with a pickup token in Order History.
-    </p>
-  </div>
-</div>
 
 <section class="listings-subheader">
   <h2>Available Listings</h2>

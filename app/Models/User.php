@@ -55,6 +55,15 @@ class User extends BaseModel
         return $stmt->execute([':hash' => $passwordHash, ':id' => $id]);
     }
 
+    /** Stores the hash of the user's current recovery code (replaces any old one). */
+    public static function updateRecoveryCode(int $id, string $codeHash): bool
+    {
+        $stmt = self::db()->prepare(
+            'UPDATE users SET recovery_code_hash = :hash WHERE id = :id'
+        );
+        return $stmt->execute([':hash' => $codeHash, ':id' => $id]);
+    }
+
     public static function setStatus(int $id, string $status): bool
     {
         $stmt = self::db()->prepare('UPDATE users SET status = :status WHERE id = :id');

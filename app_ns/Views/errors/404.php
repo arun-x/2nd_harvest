@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><title>404 — 2nd Harvest</title>
-<link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
+<link rel="stylesheet" href="<?= asset_url('css/style.css') ?>">
 </head><body>
 <section class="auth-shell">
   <div class="auth-card" style="text-align:center;">

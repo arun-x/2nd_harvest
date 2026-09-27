@@ -18,3 +18,20 @@
     });
   });
 })();
+/**
+ * Copy buttons: <button data-copy="element-id"> copies that element's text
+ * (recovery code / request number pages).
+ */
+(function () {
+  document.querySelectorAll('[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const source = document.getElementById(btn.getAttribute('data-copy'));
+      if (!source || !navigator.clipboard) return;
+      navigator.clipboard.writeText(source.textContent.trim()).then(function () {
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(function () { btn.textContent = original; }, 1500);
+      });
+    });
+  });
+})();

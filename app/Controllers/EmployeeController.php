@@ -1,16 +1,36 @@
 <?php
 /**
  * app/Controllers/EmployeeController.php
- * dashboard() below uses hardcoded sample data matching the mockup, just
- * to prove the routing -> controller -> view -> layout chain works.
- * Swap the sample arrays for real Model calls once Listing.php / Outlet.php
- * have query methods (see comment block at the top of Views/employee/dashboard.php).
+ * Supermarket staff module. Every figure on these pages comes from the
+ * signed-in staff member's outlet in the database.
  */
  
 require_once __DIR__ . '/BaseController.php';
  
 class EmployeeController extends BaseController
 {
+    /**
+     * Every page here is for supermarket staff only. Signed-out visitors go
+     * to /login; anyone signed in with another role goes to their own home.
+     */
+    public function __construct()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            header('Location: ' . BASE_URL . '/login');
+            exit;
+        }
+        if ($user->role !== 'employee') {
+            $home = [
+                'consumer' => '/consumer/dashboard',
+                'charity'  => '/charity/dashboard',
+                'admin'    => '/admin/dashboard',
+            ][$user->role] ?? '/';
+            header('Location: ' . BASE_URL . $home);
+            exit;
+        }
+    }
+
     public function dashboard(): void
     {
         $user = Auth::user();
@@ -46,13 +66,14 @@ class EmployeeController extends BaseController
 
         $activeCount  = count(array_filter($allInventory, fn($i) => $i['status'] === 'active'));
         $expiredCount = count(array_filter($allInventory, fn($i) => $i['status'] === 'expired'));
-        $totalKg = array_sum(array_map(fn($r) => (float) $r['quantity_kg'], $rows));
+        $rescuedKg      = $outlet ? Pickup::totalKgForOutlet((int) $outlet['id']) : 0.0;
+        $collectionRate = $outlet ? Pickup::collectionRateForOutlet((int) $outlet['id']) : null;
 
         $stats = [
             'active_listings' => $activeCount,
-            'total_rescued'   => number_format($totalKg, 1) . ' kg',
+            'total_rescued'   => number_format($rescuedKg, 1) . ' kg',
             'expiring_soon'   => $expiredCount,
-            'collection_rate' => count($allInventory) > 0 ? '—' : '0%',
+            'collection_rate' => $collectionRate !== null ? $collectionRate . '%' : '—',
         ];
  
         // --- Filters & sort, read from the query string ---
@@ -101,38 +122,12 @@ class EmployeeController extends BaseController
         $inventory = array_values($inventory);
  
         $communityImpact = [
-            'food_saved'        => '4,250 kg',
-            'charities_served'  => 12,
+            'food_saved'       => number_format($rescuedKg, 1) . ' kg',
+            'charities_served' => $outlet ? Pickup::charitiesServedForOutlet((int) $outlet['id']) : 0,
         ];
- 
-        $alerts = [
-            [
-                'type' => 'danger',
-                'title' => 'Expired: Sweet Bell Peppers',
-                'meta' => 'SKU VEG-BEL-005 · 5 units',
-                'action_label' => 'Clear Listing',
-                'action_href' => BASE_URL . '/employee/listings/5',
-            ],
-            [
-                'type' => 'warning',
-                'title' => 'Expiring Today: Ripe Bananas',
-                'meta' => '20 units remaining · Donate now',
-                'action_label' => 'Push to Charity',
-                'action_href' => BASE_URL . '/employee/listings/2/push',
-            ],
-        ];
- 
-        $highlight = [
-            'id' => 6,
-            'image' => $this->imageFor('Fresh Mixed Vegetable Crate', 'vegetable'),
-            'badge' => 'Available',
-            'title' => 'Fresh Mixed Vegetable Crate',
-            'category' => 'Vegetables',
-            'location' => 'Shelf A-12',
-            'expires' => '4 hours',
-            'quantity_label' => '12 units',
-        ];
- 
+
+        $alerts = $this->criticalAlerts($rows);
+
         $activeListingsTotal = $stats['active_listings'];
  
         // 1. Render the inner view into a buffer. This also sets
@@ -146,6 +141,48 @@ class EmployeeController extends BaseController
         require __DIR__ . '/../Views/layouts/main.php';
     }
  
+    /**
+     * Real alerts for this outlet's listings: today's items whose claim
+     * deadline is under two hours away, then past-day items that expired
+     * with stock still unclaimed. At most three of each.
+     */
+    private function criticalAlerts(array $rows): array
+    {
+        $fmtKg   = fn(float $n): string => rtrim(rtrim(number_format($n, 1, '.', ''), '0'), '.');
+        $today   = date('Y-m-d');
+        $now     = time();
+        $closing = [];
+        $expired = [];
+
+        foreach ($rows as $r) {
+            $remaining = (float) ($r['quantity_remaining_kg'] ?? 0);
+            if ($r['status'] !== 'available' || $remaining <= 0) {
+                continue;
+            }
+            $deadline = strtotime($r['claim_deadline']);
+            if ($r['expiry_date'] === $today && $deadline > $now && $deadline - $now <= 2 * 3600) {
+                $closing[] = [
+                    'type'         => 'warning',
+                    'title'        => 'Claims closing soon: ' . $r['item_name'],
+                    'meta'         => $fmtKg($remaining) . ' kg unclaimed · claims close at ' . date('g:i A', $deadline),
+                    'action_label' => 'Edit listing',
+                    'action_href'  => BASE_URL . '/employee/listings/' . (int) $r['id'] . '/edit',
+                ];
+            } elseif ($r['expiry_date'] < $today) {
+                $expired[] = [
+                    'type'         => 'danger',
+                    'title'        => 'Expired: ' . $r['item_name'],
+                    'meta'         => $fmtKg($remaining) . ' kg went unclaimed · expired ' . date('M j', strtotime($r['expiry_date'])),
+                    'action_label' => 'Edit listing',
+                    'action_href'  => BASE_URL . '/employee/listings/' . (int) $r['id'] . '/edit',
+                ];
+            }
+        }
+
+        // forOutlet() sorts oldest expiry first; show the most recent expiries.
+        return array_merge(array_slice($closing, 0, 3), array_slice(array_reverse($expired), 0, 3));
+    }
+
     // Pick the best image in public/assets/images/ for a listing.
     // Tries an item-name keyword match first (bananas, broccoli, ...),
     // then a category-wide default, then a generic crate.
@@ -233,7 +270,7 @@ class EmployeeController extends BaseController
             'reference_price'  => trim($_POST['reference_price'] ?? ''),
             'best_before_date' => date('Y-m-d'),
             'best_before_time' => '22:30',
-            'pickup_location'  => trim($_POST['pickup_location'] ?? ''),
+            'pickup_location'  => '-',
         ];
 
         $errors = $this->validateListing($input);
@@ -269,7 +306,7 @@ class EmployeeController extends BaseController
             'claim_deadline'  => $input['best_before_date'] . ' ' . $input['best_before_time'] . ':00',
         ]);
 
-        $this->generatePickupSlots($listingId);
+        Listing::ensurePickupSlots($listingId, date('Y-m-d'));
 
         $expiresLabel = date(
             'M j, g:i A',
@@ -295,12 +332,7 @@ class EmployeeController extends BaseController
     public function editListing(string $id): void
     {
         $id = (int) $id;
-        $listing = Listing::find($id);
-        if (!$listing) {
-            Session::flash('error', 'Listing not found.');
-            header('Location: ' . BASE_URL . '/employee/dashboard');
-            exit;
-        }
+        $listing = $this->ownListingOrFail($id);
 
         $categories = $this->listingCategories();
 
@@ -329,11 +361,7 @@ class EmployeeController extends BaseController
     public function updateListing(string $id): void
     {
         $id = (int) $id;
-        $listing = Listing::find($id);
-        if (!$listing) {
-            header('Location: ' . BASE_URL . '/employee/dashboard');
-            exit;
-        }
+        $listing = $this->ownListingOrFail($id);
 
         // Same "today only" rule as storeListing: date + deadline are not
         // user-editable; the deadline is pinned to today 22:30.
@@ -344,7 +372,7 @@ class EmployeeController extends BaseController
             'reference_price'  => trim($_POST['reference_price'] ?? ''),
             'best_before_date' => date('Y-m-d'),
             'best_before_time' => '22:30',
-            'pickup_location'  => trim($_POST['pickup_location'] ?? '-'),
+            'pickup_location'  => '-', // column removed; kept so validateListing() passes
         ];
 
         $errors = $this->validateListing($input);
@@ -376,6 +404,7 @@ class EmployeeController extends BaseController
 
     public function deleteListing(string $id): void
     {
+        $this->ownListingOrFail((int) $id);
         Listing::delete((int) $id);
         Session::flash('success', 'Listing deleted.');
         header('Location: ' . BASE_URL . '/employee/dashboard');
@@ -436,37 +465,16 @@ class EmployeeController extends BaseController
         return $errors;
     }
  
-    /**
-     * Generate the pickup-slot grid for a newly created listing.
-     *
-     * Every listing gets a fixed grid of seven 30-minute slots from
-     * 7:00 PM through 10:30 PM (store close):
-     *   19:00-19:30, 19:30-20:00, 20:00-20:30  (charity priority window)
-     *   20:30-21:00, 21:00-21:30, 21:30-22:00, 22:00-22:30  (both charities + consumers)
-     *
-     * Slot generation runs when the listing is created (before 7 PM per the
-     * daily posting cutoff), so the whole grid is always in the future.
-     * Capacity defaults to 1 per slot.
-     */
-    private function generatePickupSlots(int $listingId): void
+    /** The listing, if it belongs to the signed-in staff member's outlet; otherwise back to the dashboard. */
+    private function ownListingOrFail(int $id): array
     {
-        $firstSlot = (new DateTime())->setTime(19, 0, 0);
-        $lastSlot  = (new DateTime())->setTime(22, 0, 0);
-
-        $db   = Database::connection();
-        $stmt = $db->prepare(
-            'INSERT INTO pickup_slots (listing_id, slot_start, slot_end, capacity, booked_count)
-             VALUES (:listing_id, :start, :end, 1, 0)'
-        );
-
-        for ($slot = clone $firstSlot; $slot <= $lastSlot; $slot->modify('+30 minutes')) {
-            $slotEnd = (clone $slot)->modify('+30 minutes');
-            $stmt->execute([
-                ':listing_id' => $listingId,
-                ':start'      => $slot->format('Y-m-d H:i:s'),
-                ':end'        => $slotEnd->format('Y-m-d H:i:s'),
-            ]);
+        $listing = Listing::find($id);
+        if (!$listing || (int) $listing['outlet_id'] !== $this->outletIdForCurrentUser()) {
+            Session::flash('error', 'Listing not found.');
+            header('Location: ' . BASE_URL . '/employee/dashboard');
+            exit;
         }
+        return $listing;
     }
 
     private function outletIdForCurrentUser(): int
@@ -764,23 +772,17 @@ class EmployeeController extends BaseController
 
     public function listingPublished(): void
     {
-        // Normal flow: storeListing() redirects here after a successful
-        // save, with the real listing stashed in session. Falling back to
-        // sample data below only so this route still previews standalone.
+        // storeListing() redirects here after a successful save, with the
+        // real listing stashed in session. Without one (page refreshed or
+        // opened directly) there is nothing to show, so go back.
         $listing = Session::get('just_published');
         Session::forget('just_published');
- 
-        $listing = $listing ?? [
-            'id'              => 42,
-            'title'           => 'Gala Apples (Case of 24)',
-            'category'        => 'Fruits',
-            'quantity'        => '5 Crates / 20kg',
-            'expires_label'   => 'Today, 8:00 PM',
-            'pickup_location' => 'Loading Dock B, South Entrance',
-            'listing_ref'     => 'LST-1042',
-            'image'           => $this->imageFor('Gala Apples', 'fruit'),
-        ];
- 
+
+        if (!$listing) {
+            header('Location: ' . BASE_URL . '/employee/dashboard');
+            exit;
+        }
+
         ob_start();
         require __DIR__ . '/../Views/employee/listing_published.php';
         $content = ob_get_clean();

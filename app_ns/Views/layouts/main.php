@@ -22,10 +22,7 @@ $title  = $title  ?? '2nd Harvest';
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= htmlspecialchars($title) ?> — 2nd Harvest</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+  <title><?= htmlspecialchars($title) ?> | 2nd Harvest</title>
   <?php $cssV = @filemtime(__DIR__ . '/../../../public/assets/css/consumer-style.css') ?: time(); ?>
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/consumer-style.css?v=<?= $cssV ?>">
   <?php $jsV = @filemtime(__DIR__ . '/../../../public/assets/js/consumer.js') ?: time(); ?>

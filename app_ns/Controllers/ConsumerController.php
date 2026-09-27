@@ -47,7 +47,20 @@ class ConsumerController extends BaseController
             $category = 'all';
         }
 
+        // Location filter: set once the customer picks an address from
+        // the Places Autocomplete field (see browse.php + location-filter.js,
+        // which fill these as hidden lat/lng inputs on the filter form).
+        $address = trim($_GET['address'] ?? '');
+        $lat     = isset($_GET['lat']) && $_GET['lat'] !== '' ? (float) $_GET['lat'] : null;
+        $lng     = isset($_GET['lng']) && $_GET['lng'] !== '' ? (float) $_GET['lng'] : null;
+        $radiusKm = 30;
+
+        $selectedOutletId = isset($_GET['outlet_id']) && $_GET['outlet_id'] !== ''
+            ? (int) $_GET['outlet_id']
+            : null;
+
         $listingModel = new Listing();
+        $outletModel  = new \App\Models\Outlet();
         $priority     = new PriorityWindowService();
         $discount     = new DiscountEngine();
 
@@ -57,8 +70,27 @@ class ConsumerController extends BaseController
         $windowOpen        = $priority->isCharityWindowOpen();
         $consumerCanBrowse = $priority->isConsumerWindowOpen();
 
+        $nearbyOutlets = [];
+        $outletIds     = null; // null = no location filter applied yet
+
+        if ($lat !== null && $lng !== null) {
+            $nearbyOutlets = $outletModel->findNearby($lat, $lng, $radiusKm);
+            $nearbyIds     = array_column($nearbyOutlets, 'id');
+
+            // A specific branch was picked from the dropdown — only honour
+            // it if that branch is actually within the radius, otherwise
+            // fall back to "all nearby outlets" rather than silently
+            // showing an out-of-range branch's stock.
+            if ($selectedOutletId !== null && in_array($selectedOutletId, $nearbyIds, true)) {
+                $outletIds = [$selectedOutletId];
+            } else {
+                $selectedOutletId = null;
+                $outletIds        = $nearbyIds;
+            }
+        }
+
         $rawListings = $consumerCanBrowse
-            ? $listingModel->findUnclaimedForConsumers($category)
+            ? $listingModel->findUnclaimedForConsumers($category, $outletIds)
             : [];
 
         // Decorate each listing with the computed discount tier so
@@ -82,6 +114,12 @@ class ConsumerController extends BaseController
             'selectedCategory'   => $category,
             'consumerCanBrowse'  => $consumerCanBrowse,
             'charityWindowOpen'  => $windowOpen,
+            'address'            => $address,
+            'lat'                => $lat,
+            'lng'                => $lng,
+            'radiusKm'           => $radiusKm,
+            'nearbyOutlets'      => $nearbyOutlets,
+            'selectedOutletId'   => $selectedOutletId,
         ]);
     }
 
@@ -100,6 +138,10 @@ class ConsumerController extends BaseController
         if (!$listing || $listing['status'] !== 'available'
             || (float)$listing['quantity_remaining_kg'] <= 0) {
             $this->flash('error', 'That listing is no longer available.');
+            $this->redirect(BASE_URL . '/consumer/listings');
+        }
+        if ($listing['expiry_date'] !== date('Y-m-d')) {
+            $this->flash('error', 'That listing opens for reservation on its pickup day.');
             $this->redirect(BASE_URL . '/consumer/listings');
         }
 
@@ -144,6 +186,10 @@ class ConsumerController extends BaseController
             $this->flash('error', 'Listing not found.');
             $this->redirect(BASE_URL . '/consumer/listings');
         }
+        if ($listing['expiry_date'] !== date('Y-m-d')) {
+            $this->flash('error', 'That listing opens for reservation on its pickup day.');
+            $this->redirect(BASE_URL . '/consumer/listings');
+        }
 
         // ---- validate ----
         $qty    = (float)($_POST['quantity_kg'] ?? 0);
@@ -157,10 +203,11 @@ class ConsumerController extends BaseController
             $errors[] = 'Only ' . $listing['quantity_remaining_kg']
                      . ' kg is still available.';
         }
-        if ($slotId <= 0) {
+        // Slots are shared (no booking limit), but the slot must belong to
+        // this listing and be one consumers can book (8:30 PM onwards).
+        $validSlotIds = array_map('intval', array_column($slotModel->findAvailableForListing($id), 'id'));
+        if ($slotId <= 0 || !in_array($slotId, $validSlotIds, true)) {
             $errors[] = 'Please choose a pickup slot.';
-        } elseif (!$slotModel->hasCapacity($slotId)) {
-            $errors[] = 'That pickup slot is fully booked.';
         }
 
         if ($errors) {
@@ -298,7 +345,10 @@ class ConsumerController extends BaseController
             $this->flash('error', 'Reservation not found.');
             $this->redirect(BASE_URL . '/consumer/orders');
         }
-        if ($reservation['status'] !== 'active') {
+        $listingModel = new Listing();
+        $listing = $listingModel->find((int)$reservation['listing_id']);
+        // A reservation is only valid on its listing's day.
+        if ($reservation['status'] !== 'active' || !$listing || $listing['expiry_date'] !== date('Y-m-d')) {
             $this->flash('error', 'This reservation cannot be confirmed.');
             $this->redirect(BASE_URL . '/consumer/orders');
         }
@@ -306,7 +356,6 @@ class ConsumerController extends BaseController
         $resModel->markCompleted($reservationId, (float)$reservation['reserved_qty_kg']);
 
         // If the listing is now fully collected, transition its state.
-        $listingModel = new Listing();
         $listing = $listingModel->find((int)$reservation['listing_id']);
         if ($listing && (float)$listing['quantity_remaining_kg'] <= 0) {
             (new ListingStateMachine())
@@ -322,6 +371,103 @@ class ConsumerController extends BaseController
         );
 
         $this->flash('success', 'Pickup confirmed. Thank you for rescuing food!');
+        $this->redirect(BASE_URL . '/consumer/orders');
+    }
+
+    /* --------------------------------------------------------- */
+    /* POST /consumer/orders/{id}/edit  →  Change reserved kg    */
+    /* --------------------------------------------------------- */
+    public function editReservationQuantity(int $reservationId): void
+    {
+        $user = $this->requireRole('consumer');
+        $this->verifyCsrf();
+
+        $resModel     = new Reservation();
+        $listingModel = new Listing();
+        $notifier     = new NotificationService();
+
+        $reservation = $resModel->find($reservationId);
+        if (!$reservation || (int)$reservation['user_id'] !== (int)$user['id']) {
+            $this->flash('error', 'Reservation not found.');
+            $this->redirect(BASE_URL . '/consumer/orders');
+        }
+        if ($reservation['status'] !== 'active') {
+            $this->flash('error', 'Only active reservations can be edited.');
+            $this->redirect(BASE_URL . '/consumer/orders');
+        }
+
+        $listing = $listingModel->find((int)$reservation['listing_id']);
+        if (!$listing || $listing['expiry_date'] !== date('Y-m-d')) {
+            $this->flash('error', 'This reservation can no longer be edited.');
+            $this->redirect(BASE_URL . '/consumer/orders');
+        }
+
+        $newQty = round((float)($_POST['quantity_kg'] ?? 0), 1);
+        $oldQty = (float)$reservation['reserved_qty_kg'];
+        // Ceiling for the new qty = what's still on the listing PLUS what
+        // this reservation already holds (that stock is "ours" too).
+        $maxQty = round((float)$listing['quantity_remaining_kg'] + $oldQty, 1);
+
+        if ($newQty < 0.5) {
+            $this->flash('error', 'Minimum reservation is 0.5 kg.');
+            $this->redirect(BASE_URL . '/consumer/orders');
+        }
+        if ($newQty > $maxQty) {
+            $this->flash('error', 'Only ' . rtrim(rtrim(number_format($maxQty, 1), '0'), '.') . ' kg is available for this listing.');
+            $this->redirect(BASE_URL . '/consumer/orders');
+        }
+        if (abs($newQty - $oldQty) < 0.001) {
+            $this->flash('success', 'No change to the reservation.');
+            $this->redirect(BASE_URL . '/consumer/orders');
+        }
+
+        $unitPrice = $oldQty > 0
+            ? round((float)$reservation['price_paid'] / $oldQty, 2)
+            : 0.0;
+        $newPrice  = round($unitPrice * $newQty, 2);
+        $delta     = $newQty - $oldQty; // + = taking more stock, - = returning stock
+
+        try {
+            $this->db()->beginTransaction();
+
+            $resModel->updateQuantity($reservationId, $newQty, $newPrice);
+
+            if ($delta > 0) {
+                $listingModel->decrementRemaining((int)$reservation['listing_id'], $delta);
+            } else {
+                $listingModel->incrementRemaining((int)$reservation['listing_id'], -$delta);
+            }
+
+            // Re-open the listing if returning stock brought it back above zero.
+            $refreshed = $listingModel->find((int)$reservation['listing_id']);
+            if ($refreshed && $refreshed['status'] === 'reserved'
+                && (float)$refreshed['quantity_remaining_kg'] > 0) {
+                $listingModel->updateStatus((int)$reservation['listing_id'], 'available');
+            }
+            // Or flip to 'reserved' if taking more stock zeroed it out.
+            if ($refreshed && $refreshed['status'] === 'available'
+                && (float)$refreshed['quantity_remaining_kg'] <= 0) {
+                $listingModel->updateStatus((int)$reservation['listing_id'], 'reserved');
+            }
+
+            $this->db()->commit();
+        } catch (\Throwable $e) {
+            $this->db()->rollBack();
+            error_log($e->getMessage());
+            $this->flash('error', 'Could not update the reservation. Please try again.');
+            $this->redirect(BASE_URL . '/consumer/orders');
+        }
+
+        $notifier->notify(
+            (int)$user['id'],
+            'Reservation updated for "' . $listing['item_name'] . '" — now '
+            . rtrim(rtrim(number_format($newQty, 1), '0'), '.') . ' kg (LKR '
+            . number_format($newPrice, 2) . ').',
+            'reservation_updated'
+        );
+
+        $this->flash('success', 'Reservation updated to '
+            . rtrim(rtrim(number_format($newQty, 1), '0'), '.') . ' kg.');
         $this->redirect(BASE_URL . '/consumer/orders');
     }
 
@@ -515,32 +661,5 @@ class ConsumerController extends BaseController
     private function db(): \PDO
     {
         return \App\Core\Database::connect();
-    }
-
-    // Mirrors EmployeeController::imageFor so the marketplace card
-    // shows the same picture the employee sees for the same item.
-    private function imageFor(string $itemName, string $category): string
-    {
-        $base = BASE_URL . '/assets/images/';
-        $name = strtolower($itemName);
-
-        $keywordMap = [
-            'banana'      => 'bananas.jpg',
-            'plantain'    => 'bananas.jpg',
-            'bell pepper' => 'bell-peppers.jpg',
-            'capsicum'    => 'bell-peppers.jpg',
-            'pepper'      => 'bell-peppers.jpg',
-            'broccoli'    => 'broccoli.jpg',
-            'carrot'      => 'carrots.jpg',
-            'strawberr'   => 'strawberries.jpg',
-            'berry'       => 'strawberries.jpg',
-        ];
-        foreach ($keywordMap as $needle => $file) {
-            if (strpos($name, $needle) !== false) {
-                return $base . $file;
-            }
-        }
-
-        return $base . 'produce-crate.jpg';
     }
 }

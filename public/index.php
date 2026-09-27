@@ -20,6 +20,14 @@ if (!defined('BASE_URL')) {
     define('BASE_URL', rtrim($__base, '/'));
 }
 
+// asset_url('css/style.css') -> /.../assets/css/style.css?v=<last modified time>,
+// so browsers download a stylesheet again as soon as it changes.
+function asset_url(string $path): string
+{
+    $version = @filemtime(__DIR__ . '/assets/' . $path) ?: 0;
+    return BASE_URL . '/assets/' . $path . ($version ? '?v=' . $version : '');
+}
+
 // 2) Malinka's non-namespaced core + auth stack
 require __DIR__ . '/../app/Core/Router.php';
 require __DIR__ . '/../app/Core/Session.php';
@@ -31,15 +39,28 @@ require __DIR__ . '/../app/Models/Charity.php';
 require __DIR__ . '/../app/Models/Listing.php';
 require __DIR__ . '/../app/Models/Reservation.php';
 require __DIR__ . '/../app/Models/Pickup.php';
+require __DIR__ . '/../app/Models/Notification.php';
+require __DIR__ . '/../app/Models/AuditLog.php';
+require __DIR__ . '/../app/Models/Dispute.php';
+require __DIR__ . '/../app/Models/Report.php';
+require __DIR__ . '/../app/Models/PasswordResetRequest.php';
+require __DIR__ . '/../app/Models/ContactMessage.php';
+require __DIR__ . '/../app/Models/Announcement.php';
 require __DIR__ . '/../app/Core/Auth.php';
+require __DIR__ . '/../app/Core/Recovery.php';
+require __DIR__ . '/../app/Core/Housekeeping.php';
 require __DIR__ . '/../app/Controllers/BaseController.php';
 require __DIR__ . '/../app/Controllers/HomeController.php';
 require __DIR__ . '/../app/Controllers/AuthController.php';
 require __DIR__ . '/../app/Controllers/EmployeeController.php';
+require __DIR__ . '/../app/Controllers/AdminController.php';
 
 date_default_timezone_set('Asia/Colombo');
 
 Session::start();
+
+// End-of-day cleanup: expire past reservations, clear unreserved stock.
+Housekeeping::run();
 
 $router = new Router();
 $router->setBasePath(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])));
@@ -48,6 +69,8 @@ $router->setBasePath(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])));
 // Public
 // -------------------------------------------------------------
 $router->get('/', [HomeController::class, 'index']);
+$router->get ('/contact', [HomeController::class, 'contact']);
+$router->post('/contact', [HomeController::class, 'submitContact']);
 
 // -------------------------------------------------------------
 // Auth (Malinka's AuthController — on success it populates BOTH
@@ -59,8 +82,54 @@ $router->get ('/register/charity',      [AuthController::class, 'registerCharity
 $router->get ('/register/consumer',     [AuthController::class, 'registerConsumer']);
 $router->post('/register',              [AuthController::class, 'store']);
 $router->get ('/login',                 [AuthController::class, 'login']);
+$router->get ('/terms',                 [AuthController::class, 'terms']);
+$router->get ('/privacy',               [AuthController::class, 'privacy']);
+$router->get ('/cookies',               [AuthController::class, 'cookies']);
 $router->post('/login',                 [AuthController::class, 'authenticate']);
 $router->post('/logout',                [AuthController::class, 'logout']);
+
+// Forgot password: recovery code, or an admin-approved request (no email)
+$router->get ('/forgot-password',         [AuthController::class, 'forgotPassword']);
+$router->post('/forgot-password/code',    [AuthController::class, 'verifyRecoveryCode']);
+$router->post('/forgot-password/request', [AuthController::class, 'submitResetRequest']);
+$router->post('/forgot-password/status',  [AuthController::class, 'checkResetRequest']);
+$router->get ('/reset-password',          [AuthController::class, 'resetPassword']);
+$router->post('/reset-password',          [AuthController::class, 'updateForgottenPassword']);
+$router->get ('/recovery-code',           [AuthController::class, 'recoveryCode']);
+$router->post('/account/recovery-code',   [AuthController::class, 'regenerateRecoveryCode']);
+
+// -------------------------------------------------------------
+// Admin portal — only reachable via /admin (not linked from /login)
+// -------------------------------------------------------------
+$router->get ('/admin',                 [AdminController::class, 'login']);
+$router->post('/admin/login',           [AdminController::class, 'authenticate']);
+$router->get ('/admin/dashboard',                     [AdminController::class, 'dashboard']);
+$router->get ('/admin/registrations',                 [AdminController::class, 'registrations']);
+$router->post('/admin/registrations/{id}/approve',    [AdminController::class, 'approveRegistration']);
+$router->post('/admin/registrations/{id}/reject',     [AdminController::class, 'rejectRegistration']);
+$router->get ('/admin/password-resets',               [AdminController::class, 'passwordResets']);
+$router->post('/admin/password-resets/{id}/approve',  [AdminController::class, 'approvePasswordReset']);
+$router->post('/admin/password-resets/{id}/reject',   [AdminController::class, 'rejectPasswordReset']);
+$router->get ('/admin/messages',                      [AdminController::class, 'messages']);
+$router->post('/admin/messages/{id}/read',            [AdminController::class, 'markMessageRead']);
+$router->post('/admin/messages/{id}/unread',          [AdminController::class, 'markMessageUnread']);
+$router->get ('/admin/listings',                      [AdminController::class, 'listings']);
+$router->post('/admin/listings/{id}/remove',          [AdminController::class, 'removeListing']);
+$router->post('/admin/listings/{id}/restore',         [AdminController::class, 'restoreListing']);
+$router->get ('/admin/disputes',                      [AdminController::class, 'disputes']);
+$router->post('/admin/disputes/{id}/request-info',    [AdminController::class, 'requestDisputeInfo']);
+$router->post('/admin/disputes/{id}/resolve',         [AdminController::class, 'resolveDispute']);
+$router->get ('/admin/reports',                       [AdminController::class, 'reports']);
+$router->get ('/admin/reports/export',                [AdminController::class, 'exportReport']);
+$router->get ('/admin/users',                         [AdminController::class, 'users']);
+$router->post('/admin/users/{id}/lock',               [AdminController::class, 'lockUser']);
+$router->post('/admin/users/{id}/unlock',             [AdminController::class, 'unlockUser']);
+$router->get ('/admin/audit-log',                     [AdminController::class, 'auditLog']);
+$router->get ('/admin/audit-log/export',              [AdminController::class, 'exportAuditLog']);
+$router->get ('/admin/announcements',                 [AdminController::class, 'announcements']);
+$router->post('/admin/announcements',                 [AdminController::class, 'storeAnnouncement']);
+$router->post('/admin/announcements/{id}/update',     [AdminController::class, 'updateAnnouncement']);
+$router->post('/admin/announcements/{id}/delete',     [AdminController::class, 'deleteAnnouncement']);
 
 // -------------------------------------------------------------
 // Supermarket Staff (Malinka's Employee module)
@@ -90,9 +159,25 @@ $router->post('/consumer/listings/{id}/checkout', [\App\Controllers\ConsumerCont
 $router->get ('/consumer/orders',                 [\App\Controllers\ConsumerController::class, 'orders']);
 $router->post('/consumer/orders/{id}/confirm',    [\App\Controllers\ConsumerController::class, 'confirmPickup']);
 $router->post('/consumer/orders/{id}/cancel',     [\App\Controllers\ConsumerController::class, 'cancelReservation']);
+$router->post('/consumer/orders/{id}/edit',       [\App\Controllers\ConsumerController::class, 'editReservationQuantity']);
 $router->get ('/consumer/profile',                [\App\Controllers\ConsumerController::class, 'profile']);
 $router->post('/consumer/profile',                [\App\Controllers\ConsumerController::class, 'updateProfile']);
 $router->post('/consumer/profile/password',       [\App\Controllers\ConsumerController::class, 'changePassword']);
 $router->get ('/consumer/notifications',          [\App\Controllers\ConsumerController::class, 'notifications']);
+
+// -------------------------------------------------------------
+// Charity (shares the Consumer module's layout and models)
+// -------------------------------------------------------------
+$router->get ('/charity/dashboard',               [\App\Controllers\CharityController::class, 'dashboard']);
+$router->get ('/charity/listings',                [\App\Controllers\CharityController::class, 'browse']);
+$router->get ('/charity/listings/{id}/reserve',   [\App\Controllers\CharityController::class, 'reserve']);
+$router->post('/charity/listings/{id}/reserve',   [\App\Controllers\CharityController::class, 'confirmReserve']);
+$router->get ('/charity/pickups',                 [\App\Controllers\CharityController::class, 'pickups']);
+$router->post('/charity/pickups/{id}/cancel',     [\App\Controllers\CharityController::class, 'cancelReservation']);
+$router->post('/charity/pickups/{id}/edit',       [\App\Controllers\CharityController::class, 'editReservationQuantity']);
+$router->get ('/charity/notifications',           [\App\Controllers\CharityController::class, 'notifications']);
+$router->get ('/charity/profile',                 [\App\Controllers\CharityController::class, 'profile']);
+$router->post('/charity/profile',                 [\App\Controllers\CharityController::class, 'updateProfile']);
+$router->post('/charity/profile/password',        [\App\Controllers\CharityController::class, 'changePassword']);
 
 $router->dispatch($_SERVER['REQUEST_METHOD'], parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));

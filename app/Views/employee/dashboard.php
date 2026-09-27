@@ -54,11 +54,11 @@ $breadcrumbs  = ['Outlet', 'Dashboard'];
 $activeRoute  = 'employee.dashboard';
 $extraStylesheets = ['dashboard.css'];
 $pageActions = '
-  <a href="<?= BASE_URL ?>/employee/pickups/verify" class="btn btn-secondary">
+  <a href="' . BASE_URL . '/employee/pickups/verify" class="btn btn-secondary">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
     Verify Pickup
   </a>
-  <a href="<?= BASE_URL ?>/employee/listings/create" class="btn btn-primary">
+  <a href="' . BASE_URL . '/employee/listings/create" class="btn btn-primary">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Create Listing
   </a>
@@ -104,7 +104,7 @@ $statusBadgeClass = [
         <div class="stat-label">Expired</div>
         <div class="stat-value"><?= htmlspecialchars($stats['expiring_soon']) ?></div>
       </div>
-      <div class="stat-icon" style="background: var(--color-warning-bg); color: var(--color-warning-text);">
+      <div class="stat-icon warning">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       </div>
     </div>
@@ -249,11 +249,6 @@ $statusBadgeClass = [
           <?php endif; ?>
         </tbody>
       </table>
- 
-      <div class="sync-status">
-        <span>Showing <?= count($inventory) ?> of <?= (int) $activeListingsTotal ?> active listings</span>
-        <a href="<?= BASE_URL ?>/employee/listings" class="font-semibold text-primary">View all inventory &rsaquo;</a>
-      </div>
     </section>
  
     <div class="quick-actions-grid">
@@ -336,38 +331,6 @@ $statusBadgeClass = [
       </section>
     <?php endif; ?>
  
-    <?php if ($highlight): ?>
-      <section>
-        <h3 style="font-size: var(--fs-lg); margin-bottom: var(--space-3);">Active Highlights</h3>
-        <div class="listing-card">
-          <div class="listing-image">
-            <img src="<?= htmlspecialchars($highlight['image']) ?>" alt="">
-            <span class="availability-ribbon"><?= htmlspecialchars($highlight['badge'] ?? 'Available') ?></span>
-          </div>
-          <div class="listing-body">
-            <div class="listing-title"><?= htmlspecialchars($highlight['title']) ?></div>
-            <div class="listing-category"><?= htmlspecialchars($highlight['category']) ?></div>
- 
-            <div class="listing-meta-row">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <?= htmlspecialchars($highlight['location']) ?>
-            </div>
-            <div class="listing-meta-row">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              Expires: <?= htmlspecialchars($highlight['expires']) ?>
-            </div>
-            <div class="listing-meta-row">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-              <?= htmlspecialchars($highlight['quantity_label']) ?>
-            </div>
- 
-            <a href="<?= BASE_URL ?>/employee/listings/<?= htmlspecialchars($highlight['id']) ?>/reserve" class="btn btn-primary btn-block mt-4">
-              Reserve Item
-            </a>
-          </div>
-        </div>
-      </section>
-    <?php endif; ?>
+    
   </div>
 </div>
- 

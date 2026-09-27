@@ -7,13 +7,14 @@
  * nav, no sidebar) rather than a page inside the authenticated app shell.
  *
  * Expects (with safe fallbacks for local/dev preview):
- *   array $impactStats  ['meals_rescued', 'active_charities', 'co2_offset']
+ *   array $impactStats  ['produce_rescued', 'active_charities', 'supermarket_outlets']
+ *                       — live totals from HomeController
  */
  
 $impactStats = $impactStats ?? [
-  'produce_rescued'    => '550+ kg',
-  'active_charities' => '45+',
-  'supermarket_outlets'       => '96+',
+  'produce_rescued'     => '—',
+  'active_charities'    => '—',
+  'supermarket_outlets' => '—',
 ];
 ?>
 <!DOCTYPE html>
@@ -21,9 +22,9 @@ $impactStats = $impactStats ?? [
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2nd Harvest — Saving Food, Feeding Communities</title>
-  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
-  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/landing.css">
+  <title>2nd Harvest | Saving Food, Feeding Communities</title>
+  <link rel="stylesheet" href="<?= asset_url('css/style.css') ?>">
+  <link rel="stylesheet" href="<?= asset_url('css/landing.css') ?>">
 </head>
 <body class="landing">
  
@@ -49,11 +50,6 @@ $impactStats = $impactStats ?? [
  
   <section class="hero">
     <div>
-      <span class="pill">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 4 13v-1a7 7 0 0 1 7-7h1a7 7 0 0 1 7 7v1a7 7 0 0 1-7 7h-1z"/></svg>
-        Join the Rescue Mission
-      </span>
- 
       <h1 class="hero-heading">Saving Food, <span class="accent">Feeding Communities.</span></h1>
  
       <p class="hero-desc">
@@ -64,7 +60,6 @@ $impactStats = $impactStats ?? [
  
       <div class="flex gap-3">
         <a href="<?= BASE_URL ?>/register" class="btn btn-primary btn-lg">Start Rescuing Now</a>
-        <a href="#process" class="btn btn-secondary btn-lg">How It Works</a>
       </div>
     </div>
  
@@ -76,7 +71,6 @@ $impactStats = $impactStats ?? [
   <section id="impact">
     <div class="section-heading-center">
       <h2>Measurable Social Impact</h2>
-      <p>Real-time data reflecting our collective progress toward a zero-waste future.</p>
     </div>
  
     <div class="impact-grid">
@@ -109,6 +103,32 @@ $impactStats = $impactStats ?? [
     </div>
   </section>
  
+  <section id="process" class="process-section" aria-labelledby="process-title">
+    <div class="process-panel">
+      <header class="process-header">
+        <h2 id="process-title">From Surplus to Saved in 3 Steps</h2>
+      </header>
+
+      <ol class="process-steps">
+        <li class="process-step">
+          <span class="process-badge">1</span>
+          <h3>View the food surplus listings.</h3>
+          <p>Browse the food listings available in the supermarkets within 10km radius of your location.</p>
+        </li>
+        <li class="process-step">
+          <span class="process-badge">2</span>
+          <h3>Reserve your food.</h3>
+          <p>Select available produce in required quantities and place a reservation along with the pickup time.</p>
+        </li>
+        <li class="process-step">
+          <span class="process-badge">3</span>
+          <h3>Collect your order.</h3>
+          <p>Go to the relevant outlet and pick up your order.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
   <section id="solutions" style="max-width: 1200px; margin: 0 auto; padding: 0 var(--space-8);">
     <h2 class="section-heading-underline">Empowering Every Partner</h2>
   </section>
@@ -184,7 +204,6 @@ $impactStats = $impactStats ?? [
   <div class="cta-banner">
     <div class="cta-banner-inner">
       <h2>Ready to make a difference?</h2>
-      <p>Join the network today. Registration is completely free!</p>
       <div class="flex gap-3">
         <a href="<?= BASE_URL ?>/register" class="btn btn-lg btn-cta-primary">Register Now</a>
         <a href="<?= BASE_URL ?>/contact" class="btn btn-lg btn-cta-secondary">Contact Us</a>
@@ -228,7 +247,6 @@ $impactStats = $impactStats ?? [
  
     <div class="public-footer-bottom">
       <span>&copy; <?= date('Y') ?> 2nd Harvest Food Rescue. All rights reserved.</span>
-      <span>v2.1.0</span>
     </div>
   </footer>
  

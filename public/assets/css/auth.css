@@ -72,6 +72,47 @@
   font-size: var(--fs-xs);
   line-height: 1.6;
 }
+
+.auth-legal-link {
+  text-align: center;
+  font-size: var(--fs-sm);
+}
+
+.auth-legal-link a {
+  color: var(--color-primary-dark);
+  font-weight: 600;
+}
+
+.terms-card {
+  max-width: 780px;
+}
+
+.terms-card h2 {
+  font-size: var(--fs-xl);
+  margin: var(--space-6) 0 var(--space-2);
+}
+
+.terms-card h2:first-of-type {
+  margin-top: 0;
+}
+
+.terms-card p,
+.terms-card li {
+  color: var(--color-text-secondary);
+  font-size: var(--fs-base);
+  line-height: 1.7;
+}
+
+.terms-card ul {
+  list-style: disc;
+  margin: 0 0 var(--space-4) var(--space-6);
+}
+
+.terms-card .terms-updated {
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+  margin-bottom: var(--space-6);
+}
  
 /* --------------------------------------------------------------------------
    Role-select cards (register landing — image 1)
@@ -100,8 +141,8 @@
   width: 40px;
   height: 40px;
   border-radius: var(--radius-md);
-  background: var(--color-neutral-bg);
-  color: var(--color-text-secondary);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -135,68 +176,52 @@
 .register-panel-left {
   width: 380px;
   flex-shrink: 0;
-  background: var(--color-primary-dark);
-  color: var(--color-text-inverse);
-  padding: var(--space-8);
-  display: flex;
-  flex-direction: column;
-}
- 
-.register-panel-left h2 {
-  color: var(--color-text-inverse);
-  font-size: 1.75rem;
-  line-height: 1.2;
-  margin-bottom: var(--space-4);
-}
- 
-.register-panel-left > p {
-  color: rgba(255, 255, 255, 0.85);
-  font-size: var(--fs-base);
-  margin-bottom: var(--space-6);
-}
- 
-.register-benefit {
-  display: flex;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-}
- 
-.register-benefit-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
- 
-.register-benefit strong {
-  display: block;
-  font-size: var(--fs-sm);
-  margin-bottom: 2px;
-}
- 
-.register-benefit span {
-  font-size: var(--fs-xs);
-  color: rgba(255, 255, 255, 0.8);
-}
- 
-.register-panel-image {
-  margin-top: auto;
-  border-radius: var(--radius-md);
+  position: relative;
   overflow: hidden;
-  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: flex-end;
 }
- 
-.register-panel-image img {
+
+.register-panel-bg {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
- 
+
+.register-panel-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.75) 0%,
+    rgba(0, 0, 0, 0.35) 45%,
+    rgba(0, 0, 0, 0) 75%
+  );
+}
+
+.register-panel-copy {
+  position: relative;
+  z-index: 1;
+  padding: var(--space-8);
+  color: var(--color-text-inverse);
+}
+
+.register-panel-copy h2 {
+  color: var(--color-text-inverse);
+  font-size: 1.5rem;
+  line-height: 1.25;
+  margin-bottom: var(--space-3);
+}
+
+.register-panel-copy p {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
 .register-panel-right {
   flex: 1;
   padding: var(--space-8);
@@ -373,6 +398,78 @@
 }
  
 /* --------------------------------------------------------------------------
+   Admin portal sign-in (/admin)
+   -------------------------------------------------------------------------- */
+.admin-auth-body {
+  background: #f7faf7;
+}
+
+.admin-brand-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
+  letter-spacing: -0.02em;
+}
+
+.admin-auth-card {
+  max-width: 580px;
+  border-radius: 24px;
+  border-color: #f1f5f9;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.03);
+  padding: var(--space-10);
+}
+
+.admin-muted {
+  color: var(--color-text-muted);
+}
+
+.admin-security-note {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid #f1f5f9;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.admin-security-note p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.admin-security-note svg {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.admin-security-note .admin-security-sub {
+  font-size: 10px;
+  margin-top: var(--space-1);
+}
+
+.admin-return-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  transition: color 0.15s ease;
+}
+
+.admin-return-link:hover {
+  color: var(--color-primary);
+}
+
+@media (max-width: 600px) {
+  .admin-auth-card {
+    padding: var(--space-6);
+  }
+}
+
+/* --------------------------------------------------------------------------
    Responsive
    -------------------------------------------------------------------------- */
 @media (max-width: 900px) {
@@ -390,4 +487,133 @@
   .role-radio-group {
     grid-template-columns: 1fr;
   }
+}
+/* --------------------------------------------------------------------------
+   Address autocomplete (Nominatim) — used on the register form's address
+   fields (#address, #service_area, #location).
+   -------------------------------------------------------------------------- */
+.address-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-lg);
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.address-suggestions[hidden] { display: none; }
+.address-suggestions li {
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: var(--color-text, #1e293b);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+}
+.address-suggestions li:hover,
+.address-suggestions li.is-active {
+  background: var(--color-primary-light, #f1f5f9);
+}
+.address-suggestions li.is-empty,
+.address-suggestions li.is-loading {
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+/* --------------------------------------------------------------------------
+   Forgot password / reset password / recovery code pages
+   -------------------------------------------------------------------------- */
+.auth-card-narrow {
+  max-width: 520px;
+}
+
+.alert-item.success {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.alert-item.info {
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+}
+
+.auth-tabs {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  margin-bottom: var(--space-6);
+  background: var(--color-neutral-bg);
+  border-radius: var(--radius-md);
+}
+
+.auth-tab {
+  flex: 1;
+  text-align: center;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.auth-tab:hover {
+  color: var(--color-primary-dark);
+}
+
+.auth-tab.active {
+  background: var(--color-surface);
+  color: var(--color-primary-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-help {
+  color: var(--color-text-secondary);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  margin-bottom: var(--space-5);
+}
+
+.auth-alt-link {
+  display: block;
+  text-align: center;
+  margin-top: var(--space-4);
+  font-size: var(--fs-sm);
+}
+
+.code-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-5);
+  margin: var(--space-4) 0;
+  border: 2px dashed var(--color-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-lighter);
+}
+
+.code-box-value {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-primary-darker);
+  word-break: break-all;
+}
+
+.code-input {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 520px) {
+  .auth-tabs { flex-direction: column; }
 }

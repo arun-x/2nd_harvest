@@ -3,6 +3,15 @@ require_once __DIR__ . '/BaseModel.php';
 
 class Listing extends BaseModel
 {
+    /**
+     * Status as the rest of the app sees it. Listings are only on the
+     * marketplace on their expiry day, so an 'available' listing from a past
+     * day is reported as expired (Housekeeping clears these up shortly after).
+     * Expects the listings table aliased as l.
+     */
+    public const EFFECTIVE_STATUS_SQL =
+        "CASE WHEN l.status = 'available' AND l.expiry_date < CURDATE() THEN 'expired' ELSE l.status END";
+
     public static function create(array $data): int
     {
         $sql = 'INSERT INTO listings
@@ -34,6 +43,63 @@ class Listing extends BaseModel
         );
         $stmt->execute([':oid' => $outletId]);
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Platform-wide listings for admin moderation.
+     * Filters: id, q (item / outlet), status, category.
+     */
+    public static function adminList(array $filters = []): array
+    {
+        $clauses = [];
+        $params  = [];
+        if (!empty($filters['id'])) {
+            $clauses[] = 'l.id = :id';
+            $params[':id'] = (int) $filters['id'];
+        }
+        if (($filters['q'] ?? '') !== '') {
+            $clauses[] = '(l.item_name LIKE :q1 OR o.outlet_name LIKE :q2)';
+            $params[':q1'] = $params[':q2'] = '%' . $filters['q'] . '%';
+        }
+        if (($filters['status'] ?? '') !== '') {
+            $clauses[] = self::EFFECTIVE_STATUS_SQL . ' = :status';
+            $params[':status'] = $filters['status'];
+        }
+        if (($filters['category'] ?? '') !== '') {
+            $clauses[] = 'l.category = :category';
+            $params[':category'] = $filters['category'];
+        }
+        $where = $clauses ? 'WHERE ' . implode(' AND ', $clauses) : '';
+
+        $stmt = self::db()->prepare(
+            "SELECT l.*, " . self::EFFECTIVE_STATUS_SQL . " AS status,
+                    o.outlet_name, o.region, u.full_name AS posted_by_name,
+                    (SELECT COUNT(*) FROM reservations r WHERE r.listing_id = l.id) AS reservation_count
+             FROM listings l
+             JOIN outlets o ON o.id = l.outlet_id
+             JOIN users   u ON u.id = l.posted_by
+             $where
+             ORDER BY l.created_at DESC, l.id DESC"
+        );
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+    public static function statusCounts(): array
+    {
+        $counts = ['available' => 0, 'reserved' => 0, 'collected' => 0, 'expired' => 0, 'removed' => 0];
+        $sql = 'SELECT ' . self::EFFECTIVE_STATUS_SQL . ' AS status, COUNT(*) AS n FROM listings l GROUP BY 1';
+        foreach (self::db()->query($sql) as $row) {
+            $counts[$row['status']] = (int) $row['n'];
+        }
+        return $counts;
+    }
+
+    public static function setStatus(int $id, string $status): bool
+    {
+        $stmt = self::db()->prepare('UPDATE listings SET status = :status WHERE id = :id');
+        $stmt->execute([':status' => $status, ':id' => $id]);
+        return $stmt->rowCount() > 0;
     }
 
     public static function find(int $id): ?array
@@ -74,6 +140,45 @@ class Listing extends BaseModel
             ':expiry_date'     => $data['expiry_date'],
             ':claim_deadline'  => $data['claim_deadline'],
         ]);
+    }
+
+    /**
+     * Give a listing its pickup-slot grid for the given day, unless it
+     * already has slots on that day. Every listing gets seven 30-minute
+     * slots from 7:00 PM through 10:30 PM (store close):
+     *   19:00-19:30, 19:30-20:00, 20:00-20:30  (charity priority window)
+     *   20:30-21:00, 21:00-21:30, 21:30-22:00, 22:00-22:30  (charities + consumers)
+     * Slots are shared time windows: any number of people can book the same
+     * slot. booked_count just records how many have; capacity isn't enforced.
+     *
+     * Used when a listing is created or edited, and by Housekeeping to fix
+     * older listings whose slots are on a different day.
+     */
+    public static function ensurePickupSlots(int $listingId, string $date): void
+    {
+        $db = self::db();
+
+        $check = $db->prepare(
+            'SELECT 1 FROM pickup_slots WHERE listing_id = :id AND DATE(slot_start) = :day LIMIT 1'
+        );
+        $check->execute([':id' => $listingId, ':day' => $date]);
+        if ($check->fetchColumn()) {
+            return;
+        }
+
+        $insert = $db->prepare(
+            'INSERT INTO pickup_slots (listing_id, slot_start, slot_end, capacity, booked_count)
+             VALUES (:listing_id, :start, :end, 1, 0)'
+        );
+        $slot = (new DateTime($date))->setTime(19, 0, 0);
+        $last = (new DateTime($date))->setTime(22, 0, 0);
+        for (; $slot <= $last; $slot->modify('+30 minutes')) {
+            $insert->execute([
+                ':listing_id' => $listingId,
+                ':start'      => $slot->format('Y-m-d H:i:s'),
+                ':end'        => (clone $slot)->modify('+30 minutes')->format('Y-m-d H:i:s'),
+            ]);
+        }
     }
 
     public static function delete(int $id): bool

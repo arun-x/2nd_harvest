@@ -28,7 +28,7 @@ $user = Auth::user() ?? null; // adjust to however app/Core/Auth.php exposes the
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= htmlspecialchars($pageTitle ?? '2nd Harvest') ?> · 2nd Harvest</title>
+  <title><?= htmlspecialchars($pageTitle ?? '2nd Harvest') ?> | 2nd Harvest</title>
   <?php $cssV = @filemtime(__DIR__ . '/../../../public/assets/css/style.css') ?: time(); ?>
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= $cssV ?>">
   <?php if (!empty($extraStylesheets)): foreach ($extraStylesheets as $sheet):
@@ -57,9 +57,9 @@ $user = Auth::user() ?? null; // adjust to however app/Core/Auth.php exposes the
         </nav>
 
         <div class="topbar-right">
-          <form class="search-input" action="<?= BASE_URL ?>/employee/dashboard" method="get" role="search">
+          <form class="search-input" action="<?= htmlspecialchars($searchAction ?? BASE_URL . '/employee/dashboard') ?>" method="get" role="search">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" name="q" placeholder="Search listings...">
+            <input type="text" name="q" placeholder="<?= htmlspecialchars($searchPlaceholder ?? 'Search listings...') ?>">
           </form>
 
           <button class="icon-btn" type="button" aria-label="Notifications">
@@ -88,6 +88,27 @@ $user = Auth::user() ?? null; // adjust to however app/Core/Auth.php exposes the
 
       <main class="page">
         <?php require __DIR__ . '/partials/flash.php'; ?>
+
+        <?php if ($user && ($user->role ?? '') === 'employee' && ($activeRoute ?? '') === 'employee.dashboard'):
+          $announcements = Announcement::activeAll();
+          if ($announcements): ?>
+            <section class="announcements-banner"
+                     style="margin-bottom:16px;display:flex;flex-direction:column;gap:10px;">
+              <?php foreach ($announcements as $a): ?>
+                <div style="border:1px solid #d4e7d4;background:#f0f9f0;border-left:4px solid #16a34a;padding:12px 16px;border-radius:8px;">
+                  <div style="font-weight:700;color:#166534;margin-bottom:4px;">
+                    <?= htmlspecialchars($a['title']) ?>
+                  </div>
+                  <div style="font-size:14px;color:#1f2937;white-space:pre-wrap;">
+                    <?= htmlspecialchars($a['body']) ?>
+                  </div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:6px;">
+                    Posted <?= htmlspecialchars((new DateTime($a['created_at']))->format('M j, Y g:i A')) ?>
+                  </div>
+                </div>
+              <?php endforeach; ?>
+            </section>
+        <?php endif; endif; ?>
 
         <?php if (!empty($pageTitle)): ?>
           <div class="page-header">

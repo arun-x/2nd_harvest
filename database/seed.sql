@@ -80,3 +80,9 @@ INSERT INTO pickups (reservation_id, collected_qty_kg, confirmed_by) VALUES
 INSERT INTO notifications (user_id, message, type) VALUES
 (2, 'New listing available: Bananas at FreshMart Supermarket - Colombo 05', 'new_listing');
 
+
+-- ---------------------------------------------------------------
+-- Extra admin account (password: 123456789) — sign in at /admin
+-- ---------------------------------------------------------------
+INSERT INTO users (role, email, password_hash, full_name, phone, status) VALUES
+('admin', 'sandamina.admin@gmail.com', '$2y$10$cqBoja5Vc/0QEeFNfTgsz.1hRtNJQoqaCS.N9CkRZlXfyJsZTg6RK', 'Sandamina', NULL, 'approved');

@@ -25,15 +25,28 @@
  *   array $alerts           list of critical alert rows
  *   array $highlight        single featured listing
  *   int   $activeListingsTotal
+ *   array $filters          ['q', 'category', 'status', 'sort'] — the currently applied filters
+ *   array $categoryOptions  distinct category names for the filter <select>
  */
-
+ 
 $stats           = $stats           ?? ['active_listings' => 0, 'total_rescued' => '0 kg', 'expiring_soon' => 0, 'collection_rate' => '0%'];
 $inventory       = $inventory       ?? [];
 $communityImpact = $communityImpact ?? ['food_saved' => '0 kg', 'charities_served' => 0];
 $alerts          = $alerts          ?? [];
 $highlight       = $highlight       ?? null;
 $activeListingsTotal = $activeListingsTotal ?? count($inventory);
-
+$filters         = $filters         ?? ['q' => '', 'category' => '', 'status' => '', 'sort' => 'name_asc'];
+$categoryOptions = $categoryOptions ?? [];
+ 
+// Builds a /employee/dashboard?... link with the current filters, overridden
+// by whatever's passed in $overrides. Used by the "Expiring Soon" quick chip
+// so clicking it doesn't wipe out a search term or other active filter.
+$buildFilterUrl = function (array $overrides = []) use ($filters) {
+    $params = array_filter(array_merge($filters, $overrides), fn($v) => $v !== '' && $v !== 'name_asc');
+    $query = http_build_query($params);
+    return BASE_URL . '/employee/dashboard' . ($query ? '?' . $query : '');
+};
+ 
 // Layout/page chrome — consumed by layouts/main.php
 $pageTitle    = 'Outlet Performance';
 $pageSubtitle = 'Overview of current surplus listings and food rescue impact at your location.';
@@ -41,16 +54,16 @@ $breadcrumbs  = ['Outlet', 'Dashboard'];
 $activeRoute  = 'employee.dashboard';
 $extraStylesheets = ['dashboard.css'];
 $pageActions = '
-  <a href="/employee/pickups/verify" class="btn btn-secondary">
+  <a href="' . BASE_URL . '/employee/pickups/verify" class="btn btn-secondary">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
     Verify Pickup
   </a>
-  <a href="/employee/listings/create" class="btn btn-primary">
+  <a href="' . BASE_URL . '/employee/listings/create" class="btn btn-primary">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Create Listing
   </a>
 ';
-
+ 
 // Status badge → CSS class map, used for the inventory table
 $statusBadgeClass = [
   'active'   => 'badge-success',
@@ -59,7 +72,7 @@ $statusBadgeClass = [
   'expired'  => 'badge-danger',
 ];
 ?>
-
+ 
 <div class="stat-grid">
   <div class="stat-card">
     <div class="stat-card-top">
@@ -72,7 +85,7 @@ $statusBadgeClass = [
       </div>
     </div>
   </div>
-
+ 
   <div class="stat-card">
     <div class="stat-card-top">
       <div>
@@ -84,19 +97,19 @@ $statusBadgeClass = [
       </div>
     </div>
   </div>
-
+ 
   <div class="stat-card">
     <div class="stat-card-top">
       <div>
-        <div class="stat-label">Expiring Soon</div>
+        <div class="stat-label">Expired</div>
         <div class="stat-value"><?= htmlspecialchars($stats['expiring_soon']) ?></div>
       </div>
-      <div class="stat-icon" style="background: var(--color-warning-bg); color: var(--color-warning-text);">
+      <div class="stat-icon warning">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       </div>
     </div>
   </div>
-
+ 
   <div class="stat-card">
     <div class="stat-card-top">
       <div>
@@ -109,7 +122,7 @@ $statusBadgeClass = [
     </div>
   </div>
 </div>
-
+ 
 <div class="dashboard-grid">
   <!-- Left column -->
   <div class="dashboard-col">
@@ -119,12 +132,59 @@ $statusBadgeClass = [
           <h2 class="card-title">Inventory Management</h2>
           <p class="card-subtitle">Monitor and manage your active food surplus listings.</p>
         </div>
-        <form class="search-input" action="/employee/listings" method="get" style="width: 260px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" name="q" placeholder="Filter by name or SKU...">
-        </form>
+        <a
+          href="<?= htmlspecialchars($buildFilterUrl(['status' => $filters['status'] === 'expired' ? '' : 'expired'])) ?>"
+          class="badge <?= $filters['status'] === 'expired' ? 'badge-danger' : 'badge-outline' ?>"
+          style="text-decoration: none;"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Expired<?= $filters['status'] === 'expired' ? ' &times;' : '' ?>
+        </a>
       </div>
-
+ 
+      <form action="<?= BASE_URL ?>/employee/dashboard" method="get" class="flex gap-3 mb-4" style="flex-wrap: wrap; align-items: flex-end;">
+        <div class="field" style="margin-bottom:0; flex: 1 1 200px;">
+          <label class="field-label" style="font-size: var(--fs-xs);" for="inv_q">Search</label>
+          <div class="search-input" style="width: 100%;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="inv_q" name="q" placeholder="Filter by name or SKU..." value="<?= htmlspecialchars($filters['q']) ?>">
+          </div>
+        </div>
+ 
+        <div class="field" style="margin-bottom:0; flex: 0 1 160px;">
+          <label class="field-label" style="font-size: var(--fs-xs);" for="inv_category">Category</label>
+          <select class="select" id="inv_category" name="category">
+            <option value="">All Categories</option>
+            <?php foreach ($categoryOptions as $cat): ?>
+              <option value="<?= htmlspecialchars($cat) ?>" <?= $filters['category'] === $cat ? 'selected' : '' ?>><?= htmlspecialchars($cat) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+ 
+        <div class="field" style="margin-bottom:0; flex: 0 1 160px;">
+          <label class="field-label" style="font-size: var(--fs-xs);" for="inv_status">Status</label>
+          <select class="select" id="inv_status" name="status">
+            <option value="">All Statuses</option>
+            <option value="active"  <?= $filters['status'] === 'active'  ? 'selected' : '' ?>>Active</option>
+            <option value="expired" <?= $filters['status'] === 'expired' ? 'selected' : '' ?>>Expired</option>
+          </select>
+        </div>
+ 
+        <div class="field" style="margin-bottom:0; flex: 0 1 190px;">
+          <label class="field-label" style="font-size: var(--fs-xs);" for="inv_sort">Sort By</label>
+          <select class="select" id="inv_sort" name="sort">
+            <option value="name_asc" <?= $filters['sort'] === 'name_asc' ? 'selected' : '' ?>>Name (A-Z)</option>
+            <option value="qty_desc" <?= $filters['sort'] === 'qty_desc' ? 'selected' : '' ?>>Quantity (High-Low)</option>
+            <option value="qty_asc"  <?= $filters['sort'] === 'qty_asc'  ? 'selected' : '' ?>>Quantity (Low-High)</option>
+          </select>
+        </div>
+ 
+        <button type="submit" class="btn btn-primary">Apply</button>
+        <?php if ($filters['q'] || $filters['category'] || $filters['status'] || $filters['sort'] !== 'name_asc'): ?>
+          <a href="<?= BASE_URL ?>/employee/dashboard" class="btn btn-ghost">Clear</a>
+        <?php endif; ?>
+      </form>
+ 
       <table class="table">
         <thead>
           <tr>
@@ -142,7 +202,11 @@ $statusBadgeClass = [
           <?php if (empty($inventory)): ?>
             <tr>
               <td colspan="8" class="text-muted" style="text-align:center; padding: var(--space-8) 0;">
-                No active listings yet.
+                <?php if ($filters['q'] || $filters['category'] || $filters['status']): ?>
+                  No listings match your filters. <a href="<?= BASE_URL ?>/employee/dashboard" class="text-primary font-semibold">Clear filters</a>
+                <?php else: ?>
+                  No active listings yet.
+                <?php endif; ?>
               </td>
             </tr>
           <?php else: ?>
@@ -154,7 +218,14 @@ $statusBadgeClass = [
                 <td class="font-semibold"><?= htmlspecialchars($item['name']) ?></td>
                 <td class="text-secondary"><?= htmlspecialchars($item['category']) ?></td>
                 <td class="id-cell"><?= htmlspecialchars($item['sku']) ?></td>
-                <td><?= htmlspecialchars($item['quantity']) ?> units</td>
+                <td>
+                  <?= htmlspecialchars($item['quantity']) ?>
+                  <?php if (!empty($item['reserved_kg']) && $item['reserved_kg'] > 0): ?>
+                    <div class="text-secondary" style="font-size: var(--fs-xs);">
+                      <?= htmlspecialchars(rtrim(rtrim(number_format($item['reserved_kg'], 1, '.', ''), '0'), '.')) ?> kg reserved
+                    </div>
+                  <?php endif; ?>
+                </td>
                 <td class="text-secondary"><?= htmlspecialchars($item['expires']) ?></td>
                 <td>
                   <span class="badge <?= $statusBadgeClass[$item['status']] ?? 'badge-neutral' ?>">
@@ -162,47 +233,62 @@ $statusBadgeClass = [
                   </span>
                 </td>
                 <td>
-                  <button type="button" class="table-actions-btn" aria-label="More actions" data-listing-id="<?= htmlspecialchars($item['id'] ?? '') ?>">
-                    &#8942;
-                  </button>
+                  <div class="flex gap-2" style="align-items:center;">
+                    <a href="<?= BASE_URL ?>/employee/listings/<?= (int) $item['id'] ?>/edit"
+                       class="btn btn-ghost btn-sm">Edit</a>
+                    <form method="post"
+                          action="<?= BASE_URL ?>/employee/listings/<?= (int) $item['id'] ?>/delete"
+                          onsubmit="return confirm('Delete this listing? This cannot be undone.');"
+                          style="display:inline;">
+                      <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--color-danger-text, #b91c1c);">Delete</button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             <?php endforeach; ?>
           <?php endif; ?>
         </tbody>
       </table>
-
+ 
       <div class="sync-status">
         <span>Showing <?= count($inventory) ?> of <?= (int) $activeListingsTotal ?> active listings</span>
-        <a href="/employee/listings" class="font-semibold text-primary">View all inventory &rsaquo;</a>
+        <a href="<?= BASE_URL ?>/employee/listings" class="font-semibold text-primary">View all inventory &rsaquo;</a>
       </div>
     </section>
-
-    <div class="quick-actions-grid">
-      <a href="/employee/listings/create" class="quick-action-card">
-        <div class="quick-action-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-        </div>
-        <div>
-          <div class="quick-action-title">Quick Add</div>
-          <div class="quick-action-desc">List surplus items from daily inventory check.</div>
-        </div>
-      </a>
-
-      <a href="/employee/pickups/verify" class="quick-action-card">
-        <div class="quick-action-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        </div>
-        <div>
-          <div class="quick-action-title">Verify Reservation</div>
-          <div class="quick-action-desc">Scan QR codes for charity or consumer pickups.</div>
-        </div>
-      </a>
-    </div>
   </div>
 
   <!-- Right column -->
   <div class="dashboard-col">
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Critical Alerts
+          </h2>
+          <p class="card-subtitle">Items requiring immediate attention before expiration.</p>
+        </div>
+      </div>
+
+      <?php if (empty($alerts)): ?>
+        <div class="text-muted" style="text-align:center; padding: var(--space-8) 0;">
+          No alerts right now — nothing urgent needs your attention.
+        </div>
+      <?php else: ?>
+        <?php foreach ($alerts as $alert): ?>
+          <div class="alert-item <?= htmlspecialchars($alert['type']) ?>">
+            <div class="alert-item-title"><?= htmlspecialchars($alert['title']) ?></div>
+            <div class="alert-item-meta"><?= htmlspecialchars($alert['meta']) ?></div>
+            <?php if (!empty($alert['action_label'])): ?>
+              <a href="<?= htmlspecialchars($alert['action_href'] ?? '#') ?>" class="alert-item-action">
+                <?= htmlspecialchars($alert['action_label']) ?>
+              </a>
+            <?php endif; ?>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </section>
+
     <section class="card">
       <div class="card-header">
         <div>
@@ -231,64 +317,5 @@ $statusBadgeClass = [
         </div>
       </div>
     </section>
-
-    <?php if (!empty($alerts)): ?>
-      <section class="card">
-        <div class="card-header">
-          <div>
-            <h2 class="card-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              Critical Alerts
-            </h2>
-            <p class="card-subtitle">Items requiring immediate attention before expiration.</p>
-          </div>
-        </div>
-
-        <?php foreach ($alerts as $alert): ?>
-          <div class="alert-item <?= htmlspecialchars($alert['type']) ?>">
-            <div class="alert-item-title"><?= htmlspecialchars($alert['title']) ?></div>
-            <div class="alert-item-meta"><?= htmlspecialchars($alert['meta']) ?></div>
-            <?php if (!empty($alert['action_label'])): ?>
-              <a href="<?= htmlspecialchars($alert['action_href'] ?? '#') ?>" class="alert-item-action">
-                <?= htmlspecialchars($alert['action_label']) ?>
-              </a>
-            <?php endif; ?>
-          </div>
-        <?php endforeach; ?>
-      </section>
-    <?php endif; ?>
-
-    <?php if ($highlight): ?>
-      <section>
-        <h3 style="font-size: var(--fs-lg); margin-bottom: var(--space-3);">Active Highlights</h3>
-        <div class="listing-card">
-          <div class="listing-image">
-            <img src="<?= htmlspecialchars($highlight['image']) ?>" alt="">
-            <span class="availability-ribbon"><?= htmlspecialchars($highlight['badge'] ?? 'Available') ?></span>
-          </div>
-          <div class="listing-body">
-            <div class="listing-title"><?= htmlspecialchars($highlight['title']) ?></div>
-            <div class="listing-category"><?= htmlspecialchars($highlight['category']) ?></div>
-
-            <div class="listing-meta-row">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <?= htmlspecialchars($highlight['location']) ?>
-            </div>
-            <div class="listing-meta-row">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              Expires: <?= htmlspecialchars($highlight['expires']) ?>
-            </div>
-            <div class="listing-meta-row">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-              <?= htmlspecialchars($highlight['quantity_label']) ?>
-            </div>
-
-            <a href="/employee/listings/<?= htmlspecialchars($highlight['id']) ?>/reserve" class="btn btn-primary btn-block mt-4">
-              Reserve Item
-            </a>
-          </div>
-        </div>
-      </section>
-    <?php endif; ?>
   </div>
 </div>

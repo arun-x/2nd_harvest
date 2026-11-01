@@ -16,6 +16,7 @@ CREATE TABLE users (
   role            ENUM('employee','charity','consumer','admin') NOT NULL,
   email           VARCHAR(150) NOT NULL UNIQUE,
   password_hash   VARCHAR(255) NOT NULL,
+  recovery_code_hash VARCHAR(255) NULL,       -- hash of the one-time recovery code
   full_name       VARCHAR(150) NOT NULL,
   phone           VARCHAR(30)  NULL,
   status          ENUM('pending','approved','rejected','locked') NOT NULL DEFAULT 'pending',
@@ -34,6 +35,7 @@ CREATE TABLE outlets (
   outlet_name     VARCHAR(150) NOT NULL,
   branch_location VARCHAR(255) NOT NULL,
   region          VARCHAR(100) NOT NULL,
+  business_reg_number VARCHAR(50) NULL,
   license_doc_path VARCHAR(255) NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
@@ -45,6 +47,7 @@ CREATE TABLE charities (
   id              INT AUTO_INCREMENT PRIMARY KEY,
   user_id         INT NOT NULL,
   org_name        VARCHAR(150) NOT NULL,
+  charity_reg_number VARCHAR(50) NULL,
   address         VARCHAR(255) NOT NULL,
   operational_focus VARCHAR(150) NULL,
   verification_doc_path VARCHAR(255) NULL,
@@ -61,6 +64,7 @@ CREATE TABLE listings (
   category        ENUM('fruit','vegetable') NOT NULL,
   quantity_kg     DECIMAL(6,2) NOT NULL,
   quantity_remaining_kg DECIMAL(6,2) NOT NULL,
+  reference_price DECIMAL(10,2) NOT NULL DEFAULT 0.00,  -- per-kg price the Consumer discount engine reduces
   expiry_date     DATE NOT NULL,
   claim_deadline  DATETIME NOT NULL,          -- clamped to 7:00 PM same day
   status          ENUM('available','reserved','collected','expired','removed')
@@ -171,6 +175,42 @@ CREATE TABLE audit_log (
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------
+-- PASSWORD RESET REQUESTS: "lost my recovery code" requests that an
+-- admin verifies and approves (no email involved)
+-- ---------------------------------------------------------------
+CREATE TABLE password_reset_requests (
+  id              INT AUTO_INCREMENT PRIMARY KEY,
+  user_id         INT NOT NULL,
+  ticket_hash     CHAR(64) NOT NULL,
+  ticket_hint     CHAR(4)  NOT NULL,
+  status          ENUM('pending','approved','rejected','completed','expired','cancelled')
+                    NOT NULL DEFAULT 'pending',
+  reject_reason   VARCHAR(255) NULL,
+  reviewed_by     INT NULL,
+  reviewed_at     DATETIME NULL,
+  approved_until  DATETIME NULL,
+  completed_at    DATETIME NULL,
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id)     REFERENCES users(id),
+  FOREIGN KEY (reviewed_by) REFERENCES users(id)
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------
+-- CONTACT MESSAGES: sent from the public Contact Us page
+-- ---------------------------------------------------------------
+CREATE TABLE contact_messages (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  first_name  VARCHAR(80)  NOT NULL,
+  last_name   VARCHAR(80)  NOT NULL,
+  email       VARCHAR(150) NOT NULL,
+  message     TEXT         NOT NULL,
+  website     VARCHAR(255) NULL,
+  phone       VARCHAR(30)  NOT NULL,
+  status      ENUM('new','read') NOT NULL DEFAULT 'new',
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------
 -- Helpful indexes for the queries used throughout the app
 -- ---------------------------------------------------------------
 CREATE INDEX idx_listings_status        ON listings(status);
@@ -179,4 +219,6 @@ CREATE INDEX idx_listings_deadline      ON listings(claim_deadline);
 CREATE INDEX idx_reservations_listing   ON reservations(listing_id);
 CREATE INDEX idx_reservations_user      ON reservations(user_id);
 CREATE INDEX idx_notifications_user     ON notifications(user_id, is_read);
-
+CREATE INDEX idx_reset_requests_user     ON password_reset_requests(user_id, status);
+CREATE INDEX idx_reset_requests_status   ON password_reset_requests(status);
+CREATE INDEX idx_contact_messages_status  ON contact_messages(status);

@@ -40,9 +40,9 @@
   --color-neutral-text: #4b5563;
 
   /* Typography */
-  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
-  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Helvetica, Arial, sans-serif;
+  /* Segoe UI on Windows; San Francisco on Apple devices; Roboto on Android. */
+  --font-display: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
 
   --fs-xs: 0.75rem;   /* 12px */
@@ -76,7 +76,7 @@
   --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.14);
 
   /* Layout */
-  --sidebar-width: 280px;
+  --sidebar-width: 280barpx;
   --topbar-height: 72px;
 }
 
@@ -106,7 +106,8 @@ body {
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--color-text);
   margin: 0;
 }
@@ -189,8 +190,8 @@ input, select, textarea {
 
 .sidebar-logo img,
 .sidebar-logo svg {
-  width: 40px;
-  height: 40px;
+  width: 56px;
+  height: auto;
 }
 
 .sidebar-logo-text {
@@ -246,8 +247,8 @@ input, select, textarea {
 }
 
 .sidebar-link.active {
-  background: var(--color-primary-light);
-  color: var(--color-primary-dark);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
   font-weight: 600;
 }
 
@@ -257,15 +258,40 @@ input, select, textarea {
   padding-top: var(--space-4);
 }
 
-.sidebar-signout {
+.sidebar-signout,
+button.sidebar-signout {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  width: 100%;
   color: #b45309;
   font-weight: 600;
   font-size: var(--fs-base);
+  font-family: inherit;
+  line-height: 1.2;
   padding: var(--space-2) var(--space-3);
+  margin: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-md, 6px);
+  outline: none;
+  box-shadow: none;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
 }
+.sidebar-signout svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.sidebar-signout::-moz-focus-inner { border: 0; padding: 0; }
+.sidebar-signout:hover { background: rgba(180, 83, 9, 0.06); }
+.sidebar-signout:focus { outline: none; }
+.sidebar-signout:focus-visible { outline: 2px solid rgba(180, 83, 9, 0.35); outline-offset: 2px; }
 
 /* --------------------------------------------------------------------------
    5. Topbar
@@ -358,8 +384,20 @@ input, select, textarea {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: var(--color-primary-light);
+  background: var(--color-primary);
   object-fit: cover;
+}
+
+.user-avatar-initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-inverse);
+  font-weight: 700;
+  font-size: 15px;
+  text-transform: uppercase;
+  user-select: none;
+  line-height: 1;
 }
 
 .user-meta {
@@ -515,9 +553,13 @@ input, select, textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-primary-light);
-  color: var(--color-primary-dark);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
   flex-shrink: 0;
+}
+
+.stat-icon.warning {
+  background: var(--color-warning-text);
 }
 
 .stat-trend {
@@ -591,8 +633,8 @@ input, select, textarea {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-md);
-  background: var(--color-primary-light);
-  color: var(--color-primary-dark);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
   display: flex;
   align-items: center;
   justify-content: center;

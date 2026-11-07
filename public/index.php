@@ -47,6 +47,7 @@ require __DIR__ . '/../app/Models/PasswordResetRequest.php';
 require __DIR__ . '/../app/Models/ContactMessage.php';
 require __DIR__ . '/../app/Models/Announcement.php';
 require __DIR__ . '/../app/Core/Auth.php';
+require __DIR__ . '/../app/Core/Phone.php';
 require __DIR__ . '/../app/Core/Recovery.php';
 require __DIR__ . '/../app/Core/Housekeeping.php';
 require __DIR__ . '/../app/Controllers/BaseController.php';

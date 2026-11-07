@@ -110,7 +110,7 @@ class AuthController extends BaseController
                 'email'         => trim($_POST['email']),
                 'password_hash' => password_hash($_POST['password'], PASSWORD_DEFAULT),
                 'full_name'     => $fullName,
-                'phone'         => $_POST['phone'] ?? null,
+                'phone'         => (Phone::normalize($_POST['phone'] ?? '') ?: null),
                 // Supermarkets and charities are verified by an admin
                 // (Admin > Registrations) before they can sign in.
                 'status'        => $role === 'consumer' ? 'approved' : 'pending',
@@ -175,7 +175,20 @@ class AuthController extends BaseController
         if (!empty($input['password']) && strlen($input['password']) < 8) {
             $errors['password'] = 'Password must be at least 8 characters.';
         }
- 
+
+        // Phone: forms send 9 digits with the +94 prefix locked in the UI.
+        // Consumer registration has no phone field.
+        if ($role !== 'consumer') {
+            $normalized = Phone::normalize($input['phone'] ?? '');
+            if ($normalized === null || $normalized === '') {
+                // '' from normalize means blank; the required check above
+                // already flagged blank, so only report bad-format cases here.
+                if (!isset($errors['phone']) && $normalized === null) {
+                    $errors['phone'] = 'Enter 9 digits after +94.';
+                }
+            }
+        }
+
         if (empty($input['agree'])) {
             $errors['agree'] = 'You must agree to the Terms of Service and Privacy Policy.';
         }

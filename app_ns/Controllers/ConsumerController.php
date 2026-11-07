@@ -606,6 +606,11 @@ class ConsumerController extends BaseController
             $errors['full_name'] = 'Full name is required.';
         }
 
+        $normalizedPhone = \Phone::normalize($input['phone']);
+        if ($normalizedPhone === null) {
+            $errors['phone'] = 'Enter 9 digits after +94.';
+        }
+
         if ($errors) {
             \App\Core\Session::set('profile_form_old', $input);
             \App\Core\Session::set('profile_form_errors', $errors);
@@ -614,7 +619,7 @@ class ConsumerController extends BaseController
 
         \User::updateContact((int) $sessionUser['id'], [
             'full_name' => $input['full_name'],
-            'phone'     => $input['phone'] ?: null,
+            'phone'     => $normalizedPhone ?: null,
         ]);
 
         $this->flash('success', 'Profile updated.');

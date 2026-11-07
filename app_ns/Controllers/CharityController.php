@@ -407,15 +407,25 @@ class CharityController extends BaseController
             'full_name' => trim($_POST['full_name'] ?? ''),
             'phone'     => trim($_POST['phone'] ?? ''),
         ];
+
+        $errors = [];
         if ($input['full_name'] === '') {
+            $errors['full_name'] = 'Contact person is required.';
+        }
+        $normalizedPhone = \Phone::normalize($input['phone']);
+        if ($normalizedPhone === null) {
+            $errors['phone'] = 'Enter 9 digits after +94.';
+        }
+
+        if ($errors) {
             \App\Core\Session::set('profile_form_old', $input);
-            \App\Core\Session::set('profile_form_errors', ['full_name' => 'Contact person is required.']);
+            \App\Core\Session::set('profile_form_errors', $errors);
             $this->redirect(BASE_URL . '/charity/profile');
         }
 
         \User::updateContact((int) $user['id'], [
             'full_name' => $input['full_name'],
-            'phone'     => $input['phone'] ?: null,
+            'phone'     => $normalizedPhone ?: null,
         ]);
 
         $this->flash('success', 'Profile updated.');

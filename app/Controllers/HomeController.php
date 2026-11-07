@@ -84,8 +84,13 @@ class HomeController
         if (mb_strlen($input['message']) > 2000) {
             $errors['message'] = 'Please keep your message under 2000 characters.';
         }
-        if ($input['phone'] !== '' && !preg_match('/^\+?[0-9 ()-]{7,20}$/', $input['phone'])) {
-            $errors['phone'] = 'Enter a valid contact number.';
+        if ($input['phone'] !== '') {
+            $normalizedPhone = Phone::normalize($input['phone']);
+            if ($normalizedPhone === null) {
+                $errors['phone'] = 'Enter 9 digits after +94.';
+            } else {
+                $input['phone'] = $normalizedPhone;
+            }
         }
         if ($input['website'] !== '') {
             if (!preg_match('#^https?://#i', $input['website'])) {

@@ -708,6 +708,11 @@ class EmployeeController extends BaseController
         if ($input['branch_location'] === '') $errors['branch_location'] = 'Branch location is required.';
         if ($input['region']          === '') $errors['region']          = 'Region is required.';
 
+        $normalizedPhone = Phone::normalize($input['phone']);
+        if ($normalizedPhone === null) {
+            $errors['phone'] = 'Enter 9 digits after +94.';
+        }
+
         if ($errors) {
             Session::set('profile_form_old', $input);
             Session::set('profile_form_errors', $errors);
@@ -717,7 +722,7 @@ class EmployeeController extends BaseController
 
         User::updateContact($user->id, [
             'full_name' => $input['full_name'],
-            'phone'     => $input['phone'] ?: null,
+            'phone'     => $normalizedPhone ?: null,
         ]);
 
         $outlet = Outlet::findByUserId($user->id);

@@ -942,8 +942,3 @@ button.sidebar-signout {
   .charity-stat { flex: 1; min-width: 0; }
 }
 
-/* "Coming Tomorrow" listings: visible, not reservable yet */
-.upcoming-subheader { margin-top: 12px; }
-.product-card.is-upcoming .product-card-image { filter: saturate(0.75); }
-.product-card.is-upcoming .btn[aria-disabled="true"] { cursor: default; color: var(--text-muted); }
-.badge-status-upcoming { background: var(--tier-blue-bg); color: var(--tier-blue-fg); }

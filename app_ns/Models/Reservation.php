@@ -45,6 +45,7 @@ class Reservation extends BaseModel
         }
 
         $sql = "SELECT r.*, l.item_name, l.category, l.expiry_date,
+                       l.quantity_remaining_kg,
                        o.outlet_name, o.branch_location,
                        ps.slot_start, ps.slot_end
                 FROM reservations r
@@ -109,5 +110,23 @@ class Reservation extends BaseModel
             "UPDATE reservations SET status = 'cancelled' WHERE id = :id"
         );
         return $stmt->execute(['id' => $reservationId]);
+    }
+
+    /**
+     * Change the reserved quantity on an active reservation, along with the
+     * pre-paid amount (kept in sync with the new kg × unit price).
+     */
+    public function updateQuantity(int $reservationId, float $newQty, float $newPrice): bool
+    {
+        $stmt = $this->db->prepare(
+            "UPDATE reservations
+                SET reserved_qty_kg = :qty, price_paid = :price
+              WHERE id = :id"
+        );
+        return $stmt->execute([
+            'id'    => $reservationId,
+            'qty'   => $newQty,
+            'price' => $newPrice,
+        ]);
     }
 }

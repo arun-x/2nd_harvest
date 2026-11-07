@@ -10,8 +10,8 @@
  *      reservations from an earlier day become 'no_show' (shown as
  *      "Missed pickup"), so their pickup token stops working.
  *
- *   2. Today's and tomorrow's listings always have pickup slots on their
- *      own day (older listings edited onto a new day may not).
+ *   2. Today's open listings always have pickup slots on their own day
+ *      (older listings edited onto today may not).
  *
  *   3. Once a listing's claim deadline (10:30 PM on its day) has passed,
  *      whatever wasn't reserved is removed:
@@ -75,16 +75,16 @@ class Housekeeping
         }
     }
 
-    /** Rule 2: open listings for today/tomorrow get pickup slots on their own day. */
+    /** Rule 2: open listings for today get pickup slots on their own day. */
     private static function ensureSlots(): void
     {
         $stmt = Database::connection()->prepare(
             "SELECT l.id, l.expiry_date FROM listings l
-             WHERE l.status = 'available' AND l.expiry_date BETWEEN :today AND :tomorrow
+             WHERE l.status = 'available' AND l.expiry_date = :today
                AND NOT EXISTS (SELECT 1 FROM pickup_slots ps
                                WHERE ps.listing_id = l.id AND DATE(ps.slot_start) = l.expiry_date)"
         );
-        $stmt->execute([':today' => date('Y-m-d'), ':tomorrow' => date('Y-m-d', strtotime('+1 day'))]);
+        $stmt->execute([':today' => date('Y-m-d')]);
         foreach ($stmt->fetchAll() as $l) {
             Listing::ensurePickupSlots((int) $l['id'], $l['expiry_date']);
         }

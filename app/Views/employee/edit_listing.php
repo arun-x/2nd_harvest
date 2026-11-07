@@ -119,7 +119,7 @@ function edit_field_error($errors, $name) {
           readonly
         >
         <div class="field-hint">
-          A listing stays on the day it was posted for (listings from earlier days move to today when saved). Pickup slots run every 30 minutes until the store closes at 10:30 PM.
+          Listings are limited to today. Pickup slots run every 30 minutes until the store closes at 10:30 PM.
         </div>
         <?= edit_field_error($errors, 'best_before') ?>
       </div>
@@ -135,7 +135,7 @@ function edit_field_error($errors, $name) {
     <div class="callout-title">Editing tips</div>
     <ul>
       <li>Changes are visible on the dashboard immediately after saving.</li>
-      <li>The date can't be changed. Listings from earlier days move to today when saved.</li>
+      <li>The expiry date must still be today or up to 2 days away.</li>
       <li>To remove this listing entirely, use the Delete button on the dashboard instead.</li>
     </ul>
   </aside>

@@ -14,19 +14,17 @@ class Listing extends BaseModel
      * @param array<int>|null $outletIds  Restrict to these outlet IDs
      *   (e.g. outlets within the customer's 30km radius, or a single
      *   branch they picked from the filter). Null = no restriction.
-     * @param string|null $day  Y-m-d listing day; defaults to today. Pass
-     *   tomorrow's date for the read-only "Coming tomorrow" preview.
      */
-    public function findUnclaimedForConsumers(string $category = 'all', ?array $outletIds = null, ?string $day = null): array
+    public function findUnclaimedForConsumers(string $category = 'all', ?array $outletIds = null): array
     {
         $sql = "SELECT l.*, o.outlet_name, o.branch_location, o.region
                 FROM listings l
                 JOIN outlets o ON o.id = l.outlet_id
                 WHERE l.status IN ('available', 'reserved')
                   AND l.quantity_remaining_kg > 0
-                  AND l.expiry_date = :day";
+                  AND l.expiry_date = CURDATE()";
 
-        $params = ['day' => $day ?? date('Y-m-d')];
+        $params = [];
         if ($category !== 'all') {
             $sql .= " AND l.category = :cat";
             $params['cat'] = $category;

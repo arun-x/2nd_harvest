@@ -72,6 +72,35 @@ class User extends BaseModel
     }
 
     /**
+     * Increment failed_logins and return the new count. If the count
+     * reaches the given cap, the account is also locked in the same call.
+     */
+    public static function registerFailedLogin(int $id, int $lockAt = 5): int
+    {
+        $db = self::db();
+        $db->prepare('UPDATE users SET failed_logins = failed_logins + 1 WHERE id = :id')
+           ->execute([':id' => $id]);
+
+        $stmt = $db->prepare('SELECT failed_logins FROM users WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+        $count = (int) ($stmt->fetch()['failed_logins'] ?? 0);
+
+        if ($count >= $lockAt) {
+            $db->prepare("UPDATE users SET status = 'locked' WHERE id = :id AND status <> 'locked'")
+               ->execute([':id' => $id]);
+        }
+        return $count;
+    }
+
+    /** Reset failed_logins to 0 (called after a successful sign-in). */
+    public static function resetFailedLogins(int $id): void
+    {
+        self::db()
+            ->prepare('UPDATE users SET failed_logins = 0 WHERE id = :id AND failed_logins <> 0')
+            ->execute([':id' => $id]);
+    }
+
+    /**
      * Users joined to their outlet / charity profile, for the admin
      * Registrations and User Management screens.
      * Filters: role, status, q (name / email / organisation).

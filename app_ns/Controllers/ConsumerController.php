@@ -106,23 +106,11 @@ class ConsumerController extends BaseController
             return $row;
         }, $rawListings);
 
-        // Tomorrow's listings (posted after 7 PM) are shown read-only, priced
-        // at the discount they'll have tomorrow when they open for reservation.
-        $tomorrow = new \DateTime('tomorrow');
-        $upcoming = array_map(function (array $row) use ($discount, $tomorrow) {
-            $row['discount_pct']    = $discount->calculateDiscountPercent(new \DateTime($row['expiry_date']), $tomorrow);
-            $row['reference_price'] = (float)($row['reference_price'] ?? 0.0);
-            $row['final_price']     = $discount->applyDiscount($row['reference_price'], $row['discount_pct']);
-            $row['image']           = $this->imageFor($row['item_name'], $row['category']);
-            return $row;
-        }, $listingModel->findUnclaimedForConsumers($category, $outletIds, $tomorrow->format('Y-m-d')));
-
         $this->render('consumer/browse', [
             'title'              => 'Marketplace',
             'active'             => 'marketplace',
             'crumb'              => 'Marketplace',
             'listings'           => $listings,
-            'upcoming'           => $upcoming,
             'selectedCategory'   => $category,
             'consumerCanBrowse'  => $consumerCanBrowse,
             'charityWindowOpen'  => $windowOpen,
@@ -387,6 +375,103 @@ class ConsumerController extends BaseController
     }
 
     /* --------------------------------------------------------- */
+    /* POST /consumer/orders/{id}/edit  →  Change reserved kg    */
+    /* --------------------------------------------------------- */
+    public function editReservationQuantity(int $reservationId): void
+    {
+        $user = $this->requireRole('consumer');
+        $this->verifyCsrf();
+
+        $resModel     = new Reservation();
+        $listingModel = new Listing();
+        $notifier     = new NotificationService();
+
+        $reservation = $resModel->find($reservationId);
+        if (!$reservation || (int)$reservation['user_id'] !== (int)$user['id']) {
+            $this->flash('error', 'Reservation not found.');
+            $this->redirect(BASE_URL . '/consumer/orders');
+        }
+        if ($reservation['status'] !== 'active') {
+            $this->flash('error', 'Only active reservations can be edited.');
+            $this->redirect(BASE_URL . '/consumer/orders');
+        }
+
+        $listing = $listingModel->find((int)$reservation['listing_id']);
+        if (!$listing || $listing['expiry_date'] !== date('Y-m-d')) {
+            $this->flash('error', 'This reservation can no longer be edited.');
+            $this->redirect(BASE_URL . '/consumer/orders');
+        }
+
+        $newQty = round((float)($_POST['quantity_kg'] ?? 0), 1);
+        $oldQty = (float)$reservation['reserved_qty_kg'];
+        // Ceiling for the new qty = what's still on the listing PLUS what
+        // this reservation already holds (that stock is "ours" too).
+        $maxQty = round((float)$listing['quantity_remaining_kg'] + $oldQty, 1);
+
+        if ($newQty < 0.5) {
+            $this->flash('error', 'Minimum reservation is 0.5 kg.');
+            $this->redirect(BASE_URL . '/consumer/orders');
+        }
+        if ($newQty > $maxQty) {
+            $this->flash('error', 'Only ' . rtrim(rtrim(number_format($maxQty, 1), '0'), '.') . ' kg is available for this listing.');
+            $this->redirect(BASE_URL . '/consumer/orders');
+        }
+        if (abs($newQty - $oldQty) < 0.001) {
+            $this->flash('success', 'No change to the reservation.');
+            $this->redirect(BASE_URL . '/consumer/orders');
+        }
+
+        $unitPrice = $oldQty > 0
+            ? round((float)$reservation['price_paid'] / $oldQty, 2)
+            : 0.0;
+        $newPrice  = round($unitPrice * $newQty, 2);
+        $delta     = $newQty - $oldQty; // + = taking more stock, - = returning stock
+
+        try {
+            $this->db()->beginTransaction();
+
+            $resModel->updateQuantity($reservationId, $newQty, $newPrice);
+
+            if ($delta > 0) {
+                $listingModel->decrementRemaining((int)$reservation['listing_id'], $delta);
+            } else {
+                $listingModel->incrementRemaining((int)$reservation['listing_id'], -$delta);
+            }
+
+            // Re-open the listing if returning stock brought it back above zero.
+            $refreshed = $listingModel->find((int)$reservation['listing_id']);
+            if ($refreshed && $refreshed['status'] === 'reserved'
+                && (float)$refreshed['quantity_remaining_kg'] > 0) {
+                $listingModel->updateStatus((int)$reservation['listing_id'], 'available');
+            }
+            // Or flip to 'reserved' if taking more stock zeroed it out.
+            if ($refreshed && $refreshed['status'] === 'available'
+                && (float)$refreshed['quantity_remaining_kg'] <= 0) {
+                $listingModel->updateStatus((int)$reservation['listing_id'], 'reserved');
+            }
+
+            $this->db()->commit();
+        } catch (\Throwable $e) {
+            $this->db()->rollBack();
+            error_log($e->getMessage());
+            $this->flash('error', 'Could not update the reservation. Please try again.');
+            $this->redirect(BASE_URL . '/consumer/orders');
+        }
+
+        $notifier->notify(
+            (int)$user['id'],
+            'Reservation updated for "' . $listing['item_name'] . '" — now '
+            . rtrim(rtrim(number_format($newQty, 1), '0'), '.') . ' kg (LKR '
+            . number_format($newPrice, 2) . ').',
+            'reservation_updated'
+        );
+
+        $this->flash('success', 'Reservation updated to '
+            . rtrim(rtrim(number_format($newQty, 1), '0'), '.') . ' kg.');
+        $this->redirect(BASE_URL . '/consumer/orders');
+    }
+
+    /* --------------------------------------------------------- */
     /* POST /consumer/orders/{id}/cancel  →  Delete/cancel       */
     /* --------------------------------------------------------- */
     public function cancelReservation(int $reservationId): void
@@ -521,6 +606,11 @@ class ConsumerController extends BaseController
             $errors['full_name'] = 'Full name is required.';
         }
 
+        $normalizedPhone = \Phone::normalize($input['phone']);
+        if ($normalizedPhone === null) {
+            $errors['phone'] = 'Enter 9 digits after +94.';
+        }
+
         if ($errors) {
             \App\Core\Session::set('profile_form_old', $input);
             \App\Core\Session::set('profile_form_errors', $errors);
@@ -529,7 +619,7 @@ class ConsumerController extends BaseController
 
         \User::updateContact((int) $sessionUser['id'], [
             'full_name' => $input['full_name'],
-            'phone'     => $input['phone'] ?: null,
+            'phone'     => $normalizedPhone ?: null,
         ]);
 
         $this->flash('success', 'Profile updated.');

@@ -12,6 +12,9 @@
  
 class AuthController extends BaseController
 {
+    /** Wrong-password threshold before an account is locked. */
+    private const MAX_LOGIN_ATTEMPTS = 5;
+
     private function panelContent(): array
     {
         return [
@@ -107,7 +110,7 @@ class AuthController extends BaseController
                 'email'         => trim($_POST['email']),
                 'password_hash' => password_hash($_POST['password'], PASSWORD_DEFAULT),
                 'full_name'     => $fullName,
-                'phone'         => $_POST['phone'] ?? null,
+                'phone'         => (Phone::normalize($_POST['phone'] ?? '') ?: null),
                 // Supermarkets and charities are verified by an admin
                 // (Admin > Registrations) before they can sign in.
                 'status'        => $role === 'consumer' ? 'approved' : 'pending',
@@ -172,7 +175,20 @@ class AuthController extends BaseController
         if (!empty($input['password']) && strlen($input['password']) < 8) {
             $errors['password'] = 'Password must be at least 8 characters.';
         }
- 
+
+        // Phone: forms send 9 digits with the +94 prefix locked in the UI.
+        // Consumer registration has no phone field.
+        if ($role !== 'consumer') {
+            $normalized = Phone::normalize($input['phone'] ?? '');
+            if ($normalized === null || $normalized === '') {
+                // '' from normalize means blank; the required check above
+                // already flagged blank, so only report bad-format cases here.
+                if (!isset($errors['phone']) && $normalized === null) {
+                    $errors['phone'] = 'Enter 9 digits after +94.';
+                }
+            }
+        }
+
         if (empty($input['agree'])) {
             $errors['agree'] = 'You must agree to the Terms of Service and Privacy Policy.';
         }
@@ -238,8 +254,36 @@ class AuthController extends BaseController
         }
 
         $user = User::findByEmail($email);
-        if (!$user || !password_verify($password, $user['password_hash'])) {
+        if (!$user) {
             Session::set('login_error', 'Incorrect email or password.');
+            Session::set('login_old_email', $email);
+            Session::set('login_old_role', $role);
+            header('Location: ' . BASE_URL . '/login');
+            exit;
+        }
+
+        // If the account is already locked, say so right away — do not
+        // let further attempts add to the counter.
+        if ($user['status'] === 'locked') {
+            Session::set('login_error', 'Your account has been locked after too many failed sign-in attempts. Please contact support.');
+            Session::set('login_old_email', $email);
+            Session::set('login_old_role', $role);
+            header('Location: ' . BASE_URL . '/login');
+            exit;
+        }
+
+        if (!password_verify($password, $user['password_hash'])) {
+            $count     = User::registerFailedLogin((int) $user['id'], self::MAX_LOGIN_ATTEMPTS);
+            $remaining = max(0, self::MAX_LOGIN_ATTEMPTS - $count);
+
+            if ($remaining === 0) {
+                $msg = 'Too many failed attempts. Your account has been locked. Please contact support.';
+            } else {
+                $msg = 'Incorrect email or password. ' . $remaining
+                     . ($remaining === 1 ? ' attempt remaining before your account is locked.'
+                                         : ' attempts remaining before your account is locked.');
+            }
+            Session::set('login_error', $msg);
             Session::set('login_old_email', $email);
             Session::set('login_old_role', $role);
             header('Location: ' . BASE_URL . '/login');
@@ -277,6 +321,9 @@ class AuthController extends BaseController
             header('Location: ' . BASE_URL . '/login');
             exit;
         }
+
+        // Successful sign-in — clear any prior failed attempts.
+        User::resetFailedLogins((int) $user['id']);
 
         Session::set('user_id', (int) $user['id']);
         Session::set('user_role', $user['role']);
@@ -470,6 +517,8 @@ class AuthController extends BaseController
         $user   = User::find($userId);
 
         User::updatePassword($userId, password_hash($next, PASSWORD_DEFAULT));
+        // Password reset also clears any prior failed-login count.
+        User::resetFailedLogins($userId);
         if ($grant['request_id']) {
             PasswordResetRequest::setStatus($grant['request_id'], 'completed');
         }

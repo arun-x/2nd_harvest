@@ -67,12 +67,6 @@ class CharityController extends BaseController
             return $row;
         }, (new Listing())->findUnclaimedForConsumers($category, $outletIds));
 
-        // Tomorrow's listings (posted after 7 PM): shown, but not reservable yet.
-        $upcoming = array_map(function (array $row) {
-            $row['image'] = $this->imageFor($row['item_name'], $row['category']);
-            return $row;
-        }, (new Listing())->findUnclaimedForConsumers($category, $outletIds, date('Y-m-d', strtotime('+1 day'))));
-
         $resModel = new Reservation();
 
         $this->render('charity/browse', [
@@ -80,7 +74,6 @@ class CharityController extends BaseController
             'active'           => 'feed',
             'crumb'            => 'Reservation Feed',
             'listings'         => $listings,
-            'upcoming'         => $upcoming,
             'selectedCategory' => $category,
             'window'           => $this->priorityWindow(),
             'activeCount'      => $resModel->countActiveByUser((int) $user['id']),
@@ -219,6 +212,93 @@ class CharityController extends BaseController
         ]);
     }
 
+    /* POST /charity/pickups/{id}/edit — change reserved kg */
+    public function editReservationQuantity(int $reservationId): void
+    {
+        $user = $this->requireRole('charity');
+        $this->verifyCsrf();
+
+        $resModel     = new Reservation();
+        $listingModel = new Listing();
+        $notifier     = new NotificationService();
+
+        $reservation = $resModel->find($reservationId);
+        if (!$reservation || (int) $reservation['user_id'] !== (int) $user['id']) {
+            $this->flash('error', 'Reservation not found.');
+            $this->redirect(BASE_URL . '/charity/pickups');
+        }
+        if ($reservation['status'] !== 'active') {
+            $this->flash('error', 'Only active reservations can be edited.');
+            $this->redirect(BASE_URL . '/charity/pickups');
+        }
+
+        $listing = $listingModel->find((int) $reservation['listing_id']);
+        if (!$listing || $listing['expiry_date'] !== date('Y-m-d')) {
+            $this->flash('error', 'This reservation can no longer be edited.');
+            $this->redirect(BASE_URL . '/charity/pickups');
+        }
+
+        $newQty = round((float) ($_POST['quantity_kg'] ?? 0), 1);
+        $oldQty = (float) $reservation['reserved_qty_kg'];
+        $maxQty = round((float) $listing['quantity_remaining_kg'] + $oldQty, 1);
+
+        if ($newQty < 0.5) {
+            $this->flash('error', 'Minimum reservation is 0.5 kg.');
+            $this->redirect(BASE_URL . '/charity/pickups');
+        }
+        if ($newQty > $maxQty) {
+            $this->flash('error', 'Only ' . rtrim(rtrim(number_format($maxQty, 1), '0'), '.') . ' kg is available for this listing.');
+            $this->redirect(BASE_URL . '/charity/pickups');
+        }
+        if (abs($newQty - $oldQty) < 0.001) {
+            $this->flash('success', 'No change to the reservation.');
+            $this->redirect(BASE_URL . '/charity/pickups');
+        }
+
+        // Charity reservations are always free — price_paid stays at 0.
+        $delta = $newQty - $oldQty;
+
+        try {
+            $this->db()->beginTransaction();
+
+            $resModel->updateQuantity($reservationId, $newQty, 0.0);
+
+            if ($delta > 0) {
+                $listingModel->decrementRemaining((int) $reservation['listing_id'], $delta);
+            } else {
+                $listingModel->incrementRemaining((int) $reservation['listing_id'], -$delta);
+            }
+
+            $refreshed = $listingModel->find((int) $reservation['listing_id']);
+            if ($refreshed && $refreshed['status'] === 'reserved'
+                && (float) $refreshed['quantity_remaining_kg'] > 0) {
+                $listingModel->updateStatus((int) $reservation['listing_id'], 'available');
+            }
+            if ($refreshed && $refreshed['status'] === 'available'
+                && (float) $refreshed['quantity_remaining_kg'] <= 0) {
+                $listingModel->updateStatus((int) $reservation['listing_id'], 'reserved');
+            }
+
+            $this->db()->commit();
+        } catch (\Throwable $e) {
+            $this->db()->rollBack();
+            error_log($e->getMessage());
+            $this->flash('error', 'Could not update the reservation. Please try again.');
+            $this->redirect(BASE_URL . '/charity/pickups');
+        }
+
+        $notifier->notify(
+            (int) $user['id'],
+            'Reservation updated for "' . $listing['item_name'] . '" — now '
+            . rtrim(rtrim(number_format($newQty, 1), '0'), '.') . ' kg.',
+            'reservation_updated'
+        );
+
+        $this->flash('success', 'Reservation updated to '
+            . rtrim(rtrim(number_format($newQty, 1), '0'), '.') . ' kg.');
+        $this->redirect(BASE_URL . '/charity/pickups');
+    }
+
     /* POST /charity/pickups/{id}/cancel */
     public function cancelReservation(int $reservationId): void
     {
@@ -327,15 +407,25 @@ class CharityController extends BaseController
             'full_name' => trim($_POST['full_name'] ?? ''),
             'phone'     => trim($_POST['phone'] ?? ''),
         ];
+
+        $errors = [];
         if ($input['full_name'] === '') {
+            $errors['full_name'] = 'Contact person is required.';
+        }
+        $normalizedPhone = \Phone::normalize($input['phone']);
+        if ($normalizedPhone === null) {
+            $errors['phone'] = 'Enter 9 digits after +94.';
+        }
+
+        if ($errors) {
             \App\Core\Session::set('profile_form_old', $input);
-            \App\Core\Session::set('profile_form_errors', ['full_name' => 'Contact person is required.']);
+            \App\Core\Session::set('profile_form_errors', $errors);
             $this->redirect(BASE_URL . '/charity/profile');
         }
 
         \User::updateContact((int) $user['id'], [
             'full_name' => $input['full_name'],
-            'phone'     => $input['phone'] ?: null,
+            'phone'     => $normalizedPhone ?: null,
         ]);
 
         $this->flash('success', 'Profile updated.');

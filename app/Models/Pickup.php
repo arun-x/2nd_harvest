@@ -88,7 +88,7 @@ class Pickup extends BaseModel
         return (int) self::db()->lastInsertId();
     }
 
-    public static function recentForOutlet(int $outletId, int $limit = 5): array
+        public static function recentForOutlet(int $outletId, int $limit = 5): array
     {
         $stmt = self::db()->prepare(
             'SELECT p.reservation_id,
@@ -99,8 +99,8 @@ class Pickup extends BaseModel
              FROM pickups p
              JOIN reservations r ON r.id = p.reservation_id
              JOIN listings l     ON l.id = r.listing_id
-             JOIN users u        ON u.id = p.confirmed_by
-             LEFT JOIN charities c ON c.user_id = u.id
+             JOIN users u        ON u.id = r.user_id
+             LEFT JOIN charities c ON c.user_id = r.user_id
              WHERE l.outlet_id = :oid
              ORDER BY p.confirmed_at DESC
              LIMIT :lim'

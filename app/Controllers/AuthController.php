@@ -9,7 +9,7 @@
  * for exactly where to wire in the real database calls once that model
  * exists.
  */
- 
+
 class AuthController extends BaseController
 {
     /** Wrong-password threshold before an account is locked. */
@@ -47,14 +47,14 @@ class AuthController extends BaseController
             ],
         ];
     }
- 
+
     public function registerRoleSelect(): void
     {
         // $role intentionally left unset — register.php treats that as
         // "show the role-select grid" rather than a specific form.
         require __DIR__ . '/../Views/auth/register.php';
     }
- 
+
     private function renderRegisterForm(string $role): void
     {
         $panel  = $this->panelContent()[$role];
@@ -62,32 +62,32 @@ class AuthController extends BaseController
         $errors = Session::get('register_errors', []);
         Session::forget('register_old');
         Session::forget('register_errors');
- 
+
         require __DIR__ . '/../Views/auth/register.php';
     }
- 
+
     public function registerSupermarket(): void { $this->renderRegisterForm('supermarket'); }
     public function registerCharity(): void { $this->renderRegisterForm('charity'); }
     public function registerConsumer(): void { $this->renderRegisterForm('consumer'); }
- 
+
     public function store(): void
     {
         $role = $_POST['role'] ?? '';
- 
+
         if (!in_array($role, ['supermarket', 'charity', 'consumer'], true)) {
             header('Location: ' . BASE_URL . '/register');
             exit;
         }
- 
+
         $errors = $this->validateRegistration($role, $_POST);
- 
+
         if (!empty($errors)) {
             Session::set('register_old', $_POST);
             Session::set('register_errors', $errors);
             header('Location: ' . BASE_URL . '/register/' . $role);
             exit;
         }
- 
+
         if (User::findByEmail($_POST['email']) !== null) {
             Session::set('register_old', $_POST);
             Session::set('register_errors', ['email' => 'That email is already registered.']);
@@ -151,27 +151,27 @@ class AuthController extends BaseController
             : 'Account created! An administrator will verify your registration before you can log in.');
         $this->showRecoveryCode($recoveryCode, 'register', '/login');
     }
- 
+
     private function validateRegistration(string $role, array $input): array
     {
         $errors = [];
- 
+
         $requiredByRole = [
             'supermarket' => ['organization_name', 'branch_name', 'business_reg_number', 'contact_person', 'email', 'phone', 'password', 'address'],
             'charity'     => ['charity_reg_number', 'charity_name', 'charity_type', 'contact_person', 'email', 'phone', 'password', 'service_area'],
             'consumer'    => ['full_name', 'email', 'password', 'location'],
         ];
- 
+
         foreach ($requiredByRole[$role] as $field) {
             if (trim($input[$field] ?? '') === '') {
                 $errors[$field] = 'This field is required.';
             }
         }
- 
+
         if (!empty($input['email']) && !filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
             $errors['email'] = 'Enter a valid email address.';
         }
- 
+
         if (!empty($input['password']) && strlen($input['password']) < 8) {
             $errors['password'] = 'Password must be at least 8 characters.';
         }
@@ -192,10 +192,10 @@ class AuthController extends BaseController
         if (empty($input['agree'])) {
             $errors['agree'] = 'You must agree to the Terms of Service and Privacy Policy.';
         }
- 
+
         return $errors;
     }
- 
+
     public function login(): void
     {
         $loginError = Session::get('login_error');
@@ -223,7 +223,7 @@ class AuthController extends BaseController
     {
         require __DIR__ . '/../Views/auth/cookies.php';
     }
- 
+
     public function authenticate(): void
     {
         $role     = $_POST['role'] ?? 'supermarket';
@@ -346,7 +346,7 @@ class AuthController extends BaseController
             'consumer' => BASE_URL . '/consumer/dashboard',
             'admin'    => BASE_URL . '/admin', // admins must sign in via the /admin form
         ];
- 
+
         header('Location: ' . ($destinations[$user['role']] ?? BASE_URL . '/'));
         exit;
     }

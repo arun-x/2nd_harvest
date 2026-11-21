@@ -5,7 +5,7 @@
  * BaseController's auth-aware behavior (if you add any later) since this
  * page must render for logged-out visitors.
  */
- 
+
 class HomeController
 {
     public function index(): void

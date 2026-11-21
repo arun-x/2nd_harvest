@@ -18,13 +18,6 @@ class PriorityWindowService
         return $now >= $start && $now < $end;
     }
 
-    /*public function isConsumerWindowOpen(?\DateTime $now = null): bool
-    {
-        $now = $now ?? new \DateTime();
-        [, $end] = $this->windowBounds($now);
-        return $now >= $end;
-    }*/
-
     public function isConsumerWindowOpen(?\DateTime $now = null): bool
     {
         return true;

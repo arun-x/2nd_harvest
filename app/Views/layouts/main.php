@@ -70,8 +70,11 @@ $user = Auth::user() ?? null; // adjust to however app/Core/Auth.php exposes the
           <?php if ($user): ?>
             <?php
               $userInitial = strtoupper(mb_substr(trim($user->name ?? '?'), 0, 1)) ?: '?';
+              // Supermarket staff: the avatar chip links to their profile page.
+              $profileHref = (($user->role ?? '') === 'employee') ? BASE_URL . '/employee/profile' : null;
+              $chipTag = $profileHref ? 'a' : 'div';
             ?>
-            <div class="user-chip">
+            <<?= $chipTag ?> class="user-chip<?= $profileHref ? ' user-chip-link' : '' ?>"<?php if ($profileHref): ?> href="<?= htmlspecialchars($profileHref) ?>" title="View profile" aria-label="View your profile"<?php endif; ?>>
               <?php if (!empty($user->avatarUrl)): ?>
                 <img class="user-avatar" src="<?= htmlspecialchars($user->avatarUrl) ?>" alt="<?= htmlspecialchars($user->name) ?>">
               <?php else: ?>
@@ -81,13 +84,34 @@ $user = Auth::user() ?? null; // adjust to however app/Core/Auth.php exposes the
                 <div class="user-name"><?= htmlspecialchars($user->name) ?></div>
                 <div class="user-role"><?= htmlspecialchars($user->roleLabel ?? $user->role) ?></div>
               </div>
-            </div>
+            </<?= $chipTag ?>>
           <?php endif; ?>
         </div>
       </header>
 
       <main class="page">
         <?php require __DIR__ . '/partials/flash.php'; ?>
+
+        <?php if ($user && ($user->role ?? '') === 'employee' && ($activeRoute ?? '') === 'employee.dashboard'):
+          $announcements = Announcement::activeAll();
+          if ($announcements): ?>
+            <section class="announcements-banner"
+                     style="margin-bottom:16px;display:flex;flex-direction:column;gap:10px;">
+              <?php foreach ($announcements as $a): ?>
+                <div style="border:1px solid #d4e7d4;background:#f0f9f0;border-left:4px solid #16a34a;padding:12px 16px;border-radius:8px;">
+                  <div style="font-weight:700;color:#166534;margin-bottom:4px;">
+                    <?= htmlspecialchars($a['title']) ?>
+                  </div>
+                  <div style="font-size:14px;color:#1f2937;white-space:pre-wrap;">
+                    <?= htmlspecialchars($a['body']) ?>
+                  </div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:6px;">
+                    Posted <?= htmlspecialchars((new DateTime($a['created_at']))->format('M j, Y g:i A')) ?>
+                  </div>
+                </div>
+              <?php endforeach; ?>
+            </section>
+        <?php endif; endif; ?>
 
         <?php if (!empty($pageTitle)): ?>
           <div class="page-header">

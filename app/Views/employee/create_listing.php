@@ -48,7 +48,7 @@ function field_error($errors, $name) {
   Resupply Network
 </div>
  
-<form class="form-layout" action="<?= BASE_URL ?>/employee/listings" method="post" novalidate>
+<form class="form-layout form-layout-single" action="<?= BASE_URL ?>/employee/listings" method="post" novalidate>
   <div>
     <section class="form-section">
       <h2 class="form-section-title">Basic Information</h2>
@@ -107,17 +107,11 @@ function field_error($errors, $name) {
         <label class="field-label" for="best_before_date">Best Before / Expiry Date</label>
         <input
           class="input" type="date" id="best_before_date" name="best_before_date"
-          value="<?= htmlspecialchars($old['best_before_date'] ?? $postingDate) ?>"
+          value="<?= htmlspecialchars($old['best_before_date'] ?? date('Y-m-d')) ?>"
           readonly
         >
         <div class="field-hint">
-          <?php if (($postingDate ?? date('Y-m-d')) > date('Y-m-d')): ?>
-            It's after 7:00 PM, so this listing is for <strong>tomorrow, <?= date('D, M j', strtotime($postingDate)) ?></strong>. It shows on the marketplace now as "Coming Tomorrow" and can be reserved tomorrow.
-          <?php else: ?>
-            Listings posted before 7:00 PM are for today. After that, new listings are for tomorrow.
-          <?php endif; ?>
-          Anything not reserved by 10:30 PM on the listing's day is removed automatically.
-          Pickup slots run every 30 minutes from 7:00 PM until the store closes at 10:30 PM.
+          Listings are limited to today. Pickup slots run every 30 minutes until the store closes at 10:30 PM.
         </div>
         <?= field_error($errors, 'best_before') ?>
       </div>
@@ -129,15 +123,4 @@ function field_error($errors, $name) {
     </div>
   </div>
  
-  <aside class="callout">
-    <div class="callout-title">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-      Best Practices
-    </div>
-    <ul>
-      <li>List items at least 2 hours before the pickup window starts.</li>
-      <li>Group smaller items into "Surplus Bags" for faster processing.</li>
-      <li>Ensure loading dock access is clear for rescue vehicles.</li>
-    </ul>
-  </aside>
 </form>

@@ -607,6 +607,8 @@ class AdminController extends BaseController
         }
 
         User::setStatus((int) $id, 'approved');
+        // Give the user a fresh attempt budget after admin unlocks the account.
+        User::resetFailedLogins((int) $id);
         Notification::send((int) $id, 'Your 2nd Harvest account has been unlocked.', 'account_unlocked');
         AuditLog::record($admin->id, 'user.unlocked', 'user', (int) $id);
 
@@ -657,6 +659,111 @@ class AdminController extends BaseController
 
     // ---------------------------------------------------------------
     // Helpers
+    // ---------------------------------------------------------------
+    // Announcements — full CRUD demo
+    // ---------------------------------------------------------------
+
+    public function announcements(): void
+    {
+        $this->requireAdmin();
+
+        $rows       = Announcement::all();
+        $editing    = null;
+        $formOld    = Session::get('announcement_form_old', []);
+        $formErrors = Session::get('announcement_form_errors', []);
+        Session::forget('announcement_form_old');
+        Session::forget('announcement_form_errors');
+
+        if (!empty($_GET['edit'])) {
+            $editing = Announcement::find((int) $_GET['edit']);
+        }
+
+        $this->render('admin/announcements', compact('rows', 'editing', 'formOld', 'formErrors'));
+    }
+
+    public function storeAnnouncement(): void
+    {
+        $admin = $this->requireAdmin();
+        $this->verifyCsrf();
+
+        $input = [
+            'title'     => trim($_POST['title'] ?? ''),
+            'body'      => trim($_POST['body'] ?? ''),
+            'is_active' => !empty($_POST['is_active']) ? 1 : 0,
+        ];
+
+        $errors = $this->validateAnnouncement($input);
+        if ($errors) {
+            Session::set('announcement_form_old', $input);
+            Session::set('announcement_form_errors', $errors);
+            $this->redirect('/admin/announcements');
+        }
+
+        $id = Announcement::create($input);
+        AuditLog::record($admin->id, 'announcement.created', 'announcement', $id);
+
+        $this->back('/admin/announcements', 'success', 'Announcement created.');
+    }
+
+    public function updateAnnouncement(string $id): void
+    {
+        $admin = $this->requireAdmin();
+        $this->verifyCsrf();
+
+        $announcement = Announcement::find((int) $id);
+        if (!$announcement) {
+            $this->back('/admin/announcements', 'error', 'Announcement not found.');
+        }
+
+        $input = [
+            'title'     => trim($_POST['title'] ?? ''),
+            'body'      => trim($_POST['body'] ?? ''),
+            'is_active' => !empty($_POST['is_active']) ? 1 : 0,
+        ];
+
+        $errors = $this->validateAnnouncement($input);
+        if ($errors) {
+            Session::set('announcement_form_old', $input);
+            Session::set('announcement_form_errors', $errors);
+            $this->redirect('/admin/announcements?edit=' . (int) $id);
+        }
+
+        Announcement::update((int) $id, $input);
+        AuditLog::record($admin->id, 'announcement.updated', 'announcement', (int) $id);
+
+        $this->back('/admin/announcements', 'success', 'Announcement updated.');
+    }
+
+    public function deleteAnnouncement(string $id): void
+    {
+        $admin = $this->requireAdmin();
+        $this->verifyCsrf();
+
+        $announcement = Announcement::find((int) $id);
+        if (!$announcement) {
+            $this->back('/admin/announcements', 'error', 'Announcement not found.');
+        }
+
+        Announcement::delete((int) $id);
+        AuditLog::record($admin->id, 'announcement.deleted', 'announcement', (int) $id);
+
+        $this->back('/admin/announcements', 'success', 'Announcement deleted.');
+    }
+
+    private function validateAnnouncement(array $input): array
+    {
+        $errors = [];
+        if ($input['title'] === '') {
+            $errors['title'] = 'Title is required.';
+        } elseif (mb_strlen($input['title']) > 150) {
+            $errors['title'] = 'Title must be at most 150 characters.';
+        }
+        if ($input['body'] === '') {
+            $errors['body'] = 'Message is required.';
+        }
+        return $errors;
+    }
+
     // ---------------------------------------------------------------
 
     /**

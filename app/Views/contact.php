@@ -152,9 +152,14 @@ $messageLength = mb_strlen($old['message'] ?? '');
               </div>
               <div class="field">
                 <label class="field-label" for="phone">Contact number <span class="contact-req">*</span></label>
-                <div class="input-icon-wrap">
-                  <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>
-                  <input class="input" type="tel" id="phone" name="phone" placeholder="+94 77 123 4567" required autocomplete="tel" value="<?= $val('phone') ?>"<?= $aria('phone') ?>>
+                <div style="display:flex;align-items:stretch;">
+                  <span style="display:inline-flex;align-items:center;padding:0 12px;background:#f3f4f6;border:1px solid #d1d5db;border-right:none;border-radius:8px 0 0 8px;font-weight:600;color:#374151;">+94</span>
+                  <input class="input" type="tel" id="phone" name="phone"
+                         pattern="\d{9}" minlength="9" maxlength="9" inputmode="numeric"
+                         placeholder="771234567" required autocomplete="tel"
+                         value="<?= htmlspecialchars(Phone::stripPrefix((string) $val('phone'))) ?>"<?= $aria('phone') ?>
+                         style="border-top-left-radius:0;border-bottom-left-radius:0;flex:1;"
+                         oninput="this.value = this.value.replace(/\D+/g, '').slice(0, 9);">
                 </div>
                 <?= $err('phone') ?>
               </div>

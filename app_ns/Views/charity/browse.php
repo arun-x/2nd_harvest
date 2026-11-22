@@ -3,7 +3,6 @@
  * Charity Reservation Feed, rendered by CharityController::browse().
  *
  * @var array  $listings          Today's open listings (with 'image').
- * @var array  $upcoming          Tomorrow's listings (with 'image'); shown read-only.
  * @var string $selectedCategory  'all' | 'fruit' | 'vegetable'
  * @var array  $window            ['state' => upcoming|open|closed, 'start' => DateTime, 'end' => DateTime]
  * @var int    $activeCount       Active (uncollected) reservations.
@@ -173,46 +172,6 @@ $expiryLabel = function (string $ymd): string {
           <?php else: ?>
             <span class="btn btn-secondary btn-block" aria-disabled="true">Fully reserved</span>
           <?php endif; ?>
-        </div>
-      </article>
-    <?php endforeach; ?>
-  </div>
-<?php endif; ?>
-
-<?php if (!empty($upcoming)): ?>
-  <section class="listings-subheader upcoming-subheader">
-    <h2>Coming Tomorrow</h2>
-    <span class="location-note">Posted this evening for pickup tomorrow. You can reserve these from tomorrow.</span>
-  </section>
-  <div class="product-grid">
-    <?php foreach ($upcoming as $l):
-      $searchIdx = strtolower(implode(' ', [$l['item_name'], $l['category'], $l['outlet_name'] ?? '']));
-    ?>
-      <article class="product-card is-upcoming" data-product-card data-search-index="<?= htmlspecialchars($searchIdx) ?>">
-        <div class="product-card-image" style="background-image: url('<?= htmlspecialchars($l['image']) ?>');">
-          <span class="product-badge badge-tier-free">FREE FOR CHARITIES</span>
-          <span class="product-badge badge-status-upcoming">Tomorrow</span>
-        </div>
-        <div class="product-card-body">
-          <div>
-            <p class="product-title" title="<?= htmlspecialchars($l['item_name']) ?>"><?= htmlspecialchars($l['item_name']) ?></p>
-            <p class="product-category"><?= htmlspecialchars(ucfirst($l['category'])) ?></p>
-          </div>
-          <div class="product-meta">
-            <div class="product-meta-row">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
-              <span><?= htmlspecialchars($l['outlet_name'] ?? 'Local outlet') ?></span>
-            </div>
-            <div class="product-meta-row">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
-              <span>Pickup <?= htmlspecialchars(date('D, M j', strtotime($l['expiry_date']))) ?></span>
-            </div>
-            <div class="product-meta-row">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="5" x="2" y="4" rx="2"/><path d="M4 9v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9"/><path d="M10 13h4"/></svg>
-              <span><?= htmlspecialchars(number_format((float) $l['quantity_remaining_kg'], 1)) ?> kg listed</span>
-            </div>
-          </div>
-          <span class="btn btn-secondary btn-block" aria-disabled="true">Opens tomorrow</span>
         </div>
       </article>
     <?php endforeach; ?>

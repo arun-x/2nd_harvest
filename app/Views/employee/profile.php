@@ -62,9 +62,15 @@ $err = function (array $bag, string $key) {
         </div>
         <div class="field">
           <label class="field-label" for="phone">Phone Number</label>
-          <input class="input" type="tel" id="phone" name="phone"
-                 value="<?= $val('phone', $userRow['phone'] ?? '') ?>"
-                 placeholder="+94 71 234 5678">
+          <div style="display:flex;align-items:stretch;">
+            <span style="display:inline-flex;align-items:center;padding:0 12px;background:#f3f4f6;border:1px solid #d1d5db;border-right:none;border-radius:8px 0 0 8px;font-weight:600;color:#374151;">+94</span>
+            <input class="input" type="tel" id="phone" name="phone"
+                   pattern="\d{9}" minlength="9" maxlength="9" inputmode="numeric"
+                   placeholder="711234567"
+                   value="<?= htmlspecialchars(Phone::stripPrefix((string) $val('phone', $userRow['phone'] ?? ''))) ?>"
+                   style="border-top-left-radius:0;border-bottom-left-radius:0;flex:1;"
+                   oninput="this.value = this.value.replace(/\D+/g, '').slice(0, 9);">
+          </div>
           <?= $err($errors, 'phone') ?>
         </div>
       </div>

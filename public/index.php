@@ -45,7 +45,9 @@ require __DIR__ . '/../app/Models/Dispute.php';
 require __DIR__ . '/../app/Models/Report.php';
 require __DIR__ . '/../app/Models/PasswordResetRequest.php';
 require __DIR__ . '/../app/Models/ContactMessage.php';
+require __DIR__ . '/../app/Models/Announcement.php';
 require __DIR__ . '/../app/Core/Auth.php';
+require __DIR__ . '/../app/Core/Phone.php';
 require __DIR__ . '/../app/Core/Recovery.php';
 require __DIR__ . '/../app/Core/Housekeeping.php';
 require __DIR__ . '/../app/Controllers/BaseController.php';
@@ -125,6 +127,10 @@ $router->post('/admin/users/{id}/lock',               [AdminController::class, '
 $router->post('/admin/users/{id}/unlock',             [AdminController::class, 'unlockUser']);
 $router->get ('/admin/audit-log',                     [AdminController::class, 'auditLog']);
 $router->get ('/admin/audit-log/export',              [AdminController::class, 'exportAuditLog']);
+$router->get ('/admin/announcements',                 [AdminController::class, 'announcements']);
+$router->post('/admin/announcements',                 [AdminController::class, 'storeAnnouncement']);
+$router->post('/admin/announcements/{id}/update',     [AdminController::class, 'updateAnnouncement']);
+$router->post('/admin/announcements/{id}/delete',     [AdminController::class, 'deleteAnnouncement']);
 
 // -------------------------------------------------------------
 // Supermarket Staff (Malinka's Employee module)
@@ -154,6 +160,7 @@ $router->post('/consumer/listings/{id}/checkout', [\App\Controllers\ConsumerCont
 $router->get ('/consumer/orders',                 [\App\Controllers\ConsumerController::class, 'orders']);
 $router->post('/consumer/orders/{id}/confirm',    [\App\Controllers\ConsumerController::class, 'confirmPickup']);
 $router->post('/consumer/orders/{id}/cancel',     [\App\Controllers\ConsumerController::class, 'cancelReservation']);
+$router->post('/consumer/orders/{id}/edit',       [\App\Controllers\ConsumerController::class, 'editReservationQuantity']);
 $router->get ('/consumer/profile',                [\App\Controllers\ConsumerController::class, 'profile']);
 $router->post('/consumer/profile',                [\App\Controllers\ConsumerController::class, 'updateProfile']);
 $router->post('/consumer/profile/password',       [\App\Controllers\ConsumerController::class, 'changePassword']);
@@ -168,6 +175,7 @@ $router->get ('/charity/listings/{id}/reserve',   [\App\Controllers\CharityContr
 $router->post('/charity/listings/{id}/reserve',   [\App\Controllers\CharityController::class, 'confirmReserve']);
 $router->get ('/charity/pickups',                 [\App\Controllers\CharityController::class, 'pickups']);
 $router->post('/charity/pickups/{id}/cancel',     [\App\Controllers\CharityController::class, 'cancelReservation']);
+$router->post('/charity/pickups/{id}/edit',       [\App\Controllers\CharityController::class, 'editReservationQuantity']);
 $router->get ('/charity/notifications',           [\App\Controllers\CharityController::class, 'notifications']);
 $router->get ('/charity/profile',                 [\App\Controllers\CharityController::class, 'profile']);
 $router->post('/charity/profile',                 [\App\Controllers\CharityController::class, 'updateProfile']);

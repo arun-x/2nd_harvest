@@ -105,11 +105,14 @@ $token = fn(array $o): string => 'HRV-' . strtoupper(substr(md5((string) $o['id'
 
         <footer class="order-footer">
           <?php if ($status === 'active'): ?>
-            <form method="post" action="<?= $base ?>/charity/pickups/<?= (int) $order['id'] ?>/cancel"
-                  data-confirm="Cancel this pickup? The food will go back on the feed for others." style="display:inline;">
-              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
-              <button type="submit" class="btn btn-secondary">Cancel pickup</button>
-            </form>
+            <div style="display:flex;gap:12px;">
+              <form method="post" action="<?= $base ?>/charity/pickups/<?= (int) $order['id'] ?>/cancel"
+                    data-confirm="Cancel this pickup? The food will go back on the feed for others." style="display:inline;">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
+                <button type="submit" class="btn btn-secondary">Cancel pickup</button>
+              </form>
+              <button type="button" class="btn btn-secondary" data-open-modal="edit-<?= (int) $order['id'] ?>">Edit</button>
+            </div>
             <button type="button" class="btn btn-primary" data-open-modal="token-<?= (int) $order['id'] ?>">Show pickup token</button>
           <?php else: ?>
             <span style="font-size:13px;color:var(--text-muted);"><?= htmlspecialchars($pillLabel) ?></span>
@@ -119,6 +122,37 @@ $token = fn(array $o): string => 'HRV-' . strtoupper(substr(md5((string) $o['id'
       </article>
 
       <?php if ($status === 'active'): ?>
+        <?php $maxKg = round((float) ($order['quantity_remaining_kg'] ?? 0) + (float) $order['reserved_qty_kg'], 1); ?>
+        <div class="modal-backdrop" id="edit-<?= (int) $order['id'] ?>" style="display:none;" role="dialog" aria-modal="true">
+          <div class="modal-card">
+            <button type="button" class="modal-close" data-close-modal aria-label="Close">×</button>
+            <h3 style="font-family:var(--font-display);margin:0 0 6px;">Edit reservation</h3>
+            <p style="font-size:14px;color:var(--text-muted);margin:0 0 12px;">
+              Change how much of <strong><?= htmlspecialchars($order['item_name']) ?></strong> you want to pick up. Minimum 0.5 kg, up to <?= rtrim(rtrim(number_format($maxKg, 1), '0'), '.') ?> kg.
+            </p>
+            <form method="post" action="<?= $base ?>/charity/pickups/<?= (int) $order['id'] ?>/edit">
+              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
+              <label for="qty-<?= (int) $order['id'] ?>" style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">
+                New quantity (kg)
+              </label>
+              <input type="number"
+                     id="qty-<?= (int) $order['id'] ?>"
+                     name="quantity_kg"
+                     class="input"
+                     step="0.5"
+                     min="0.5"
+                     max="<?= htmlspecialchars((string) $maxKg) ?>"
+                     value="<?= htmlspecialchars(number_format((float) $order['reserved_qty_kg'], 1)) ?>"
+                     required
+                     style="width:100%;margin-bottom:14px;">
+              <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+                <button type="submit" class="btn btn-primary">Save changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
         <div class="modal-backdrop" id="token-<?= (int) $order['id'] ?>" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="token-title-<?= (int) $order['id'] ?>">
           <div class="modal-card">
             <button type="button" class="modal-close" data-close-modal aria-label="Close">×</button>

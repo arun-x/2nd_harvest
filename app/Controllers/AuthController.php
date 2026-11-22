@@ -9,9 +9,12 @@
  * for exactly where to wire in the real database calls once that model
  * exists.
  */
- 
+
 class AuthController extends BaseController
 {
+    /** Wrong-password threshold before an account is locked. */
+    private const MAX_LOGIN_ATTEMPTS = 5;
+
     private function panelContent(): array
     {
         return [
@@ -44,14 +47,14 @@ class AuthController extends BaseController
             ],
         ];
     }
- 
+
     public function registerRoleSelect(): void
     {
         // $role intentionally left unset — register.php treats that as
         // "show the role-select grid" rather than a specific form.
         require __DIR__ . '/../Views/auth/register.php';
     }
- 
+
     private function renderRegisterForm(string $role): void
     {
         $panel  = $this->panelContent()[$role];
@@ -59,32 +62,32 @@ class AuthController extends BaseController
         $errors = Session::get('register_errors', []);
         Session::forget('register_old');
         Session::forget('register_errors');
- 
+
         require __DIR__ . '/../Views/auth/register.php';
     }
- 
+
     public function registerSupermarket(): void { $this->renderRegisterForm('supermarket'); }
     public function registerCharity(): void { $this->renderRegisterForm('charity'); }
     public function registerConsumer(): void { $this->renderRegisterForm('consumer'); }
- 
+
     public function store(): void
     {
         $role = $_POST['role'] ?? '';
- 
+
         if (!in_array($role, ['supermarket', 'charity', 'consumer'], true)) {
             header('Location: ' . BASE_URL . '/register');
             exit;
         }
- 
+
         $errors = $this->validateRegistration($role, $_POST);
- 
+
         if (!empty($errors)) {
             Session::set('register_old', $_POST);
             Session::set('register_errors', $errors);
             header('Location: ' . BASE_URL . '/register/' . $role);
             exit;
         }
- 
+
         if (User::findByEmail($_POST['email']) !== null) {
             Session::set('register_old', $_POST);
             Session::set('register_errors', ['email' => 'That email is already registered.']);
@@ -107,7 +110,7 @@ class AuthController extends BaseController
                 'email'         => trim($_POST['email']),
                 'password_hash' => password_hash($_POST['password'], PASSWORD_DEFAULT),
                 'full_name'     => $fullName,
-                'phone'         => $_POST['phone'] ?? null,
+                'phone'         => (Phone::normalize($_POST['phone'] ?? '') ?: null),
                 // Supermarkets and charities are verified by an admin
                 // (Admin > Registrations) before they can sign in.
                 'status'        => $role === 'consumer' ? 'approved' : 'pending',
@@ -148,38 +151,51 @@ class AuthController extends BaseController
             : 'Account created! An administrator will verify your registration before you can log in.');
         $this->showRecoveryCode($recoveryCode, 'register', '/login');
     }
- 
+
     private function validateRegistration(string $role, array $input): array
     {
         $errors = [];
- 
+
         $requiredByRole = [
             'supermarket' => ['organization_name', 'branch_name', 'business_reg_number', 'contact_person', 'email', 'phone', 'password', 'address'],
             'charity'     => ['charity_reg_number', 'charity_name', 'charity_type', 'contact_person', 'email', 'phone', 'password', 'service_area'],
             'consumer'    => ['full_name', 'email', 'password', 'location'],
         ];
- 
+
         foreach ($requiredByRole[$role] as $field) {
             if (trim($input[$field] ?? '') === '') {
                 $errors[$field] = 'This field is required.';
             }
         }
- 
+
         if (!empty($input['email']) && !filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
             $errors['email'] = 'Enter a valid email address.';
         }
- 
+
         if (!empty($input['password']) && strlen($input['password']) < 8) {
             $errors['password'] = 'Password must be at least 8 characters.';
         }
- 
+
+        // Phone: forms send 9 digits with the +94 prefix locked in the UI.
+        // Consumer registration has no phone field.
+        if ($role !== 'consumer') {
+            $normalized = Phone::normalize($input['phone'] ?? '');
+            if ($normalized === null || $normalized === '') {
+                // '' from normalize means blank; the required check above
+                // already flagged blank, so only report bad-format cases here.
+                if (!isset($errors['phone']) && $normalized === null) {
+                    $errors['phone'] = 'Enter 9 digits after +94.';
+                }
+            }
+        }
+
         if (empty($input['agree'])) {
             $errors['agree'] = 'You must agree to the Terms of Service and Privacy Policy.';
         }
- 
+
         return $errors;
     }
- 
+
     public function login(): void
     {
         $loginError = Session::get('login_error');
@@ -207,7 +223,7 @@ class AuthController extends BaseController
     {
         require __DIR__ . '/../Views/auth/cookies.php';
     }
- 
+
     public function authenticate(): void
     {
         $role     = $_POST['role'] ?? 'supermarket';
@@ -238,8 +254,36 @@ class AuthController extends BaseController
         }
 
         $user = User::findByEmail($email);
-        if (!$user || !password_verify($password, $user['password_hash'])) {
+        if (!$user) {
             Session::set('login_error', 'Incorrect email or password.');
+            Session::set('login_old_email', $email);
+            Session::set('login_old_role', $role);
+            header('Location: ' . BASE_URL . '/login');
+            exit;
+        }
+
+        // If the account is already locked, say so right away — do not
+        // let further attempts add to the counter.
+        if ($user['status'] === 'locked') {
+            Session::set('login_error', 'Your account has been locked after too many failed sign-in attempts. Please contact support.');
+            Session::set('login_old_email', $email);
+            Session::set('login_old_role', $role);
+            header('Location: ' . BASE_URL . '/login');
+            exit;
+        }
+
+        if (!password_verify($password, $user['password_hash'])) {
+            $count     = User::registerFailedLogin((int) $user['id'], self::MAX_LOGIN_ATTEMPTS);
+            $remaining = max(0, self::MAX_LOGIN_ATTEMPTS - $count);
+
+            if ($remaining === 0) {
+                $msg = 'Too many failed attempts. Your account has been locked. Please contact support.';
+            } else {
+                $msg = 'Incorrect email or password. ' . $remaining
+                     . ($remaining === 1 ? ' attempt remaining before your account is locked.'
+                                         : ' attempts remaining before your account is locked.');
+            }
+            Session::set('login_error', $msg);
             Session::set('login_old_email', $email);
             Session::set('login_old_role', $role);
             header('Location: ' . BASE_URL . '/login');
@@ -278,6 +322,9 @@ class AuthController extends BaseController
             exit;
         }
 
+        // Successful sign-in — clear any prior failed attempts.
+        User::resetFailedLogins((int) $user['id']);
+
         Session::set('user_id', (int) $user['id']);
         Session::set('user_role', $user['role']);
         Session::set('user_email', $user['email']);
@@ -299,7 +346,7 @@ class AuthController extends BaseController
             'consumer' => BASE_URL . '/consumer/dashboard',
             'admin'    => BASE_URL . '/admin', // admins must sign in via the /admin form
         ];
- 
+
         header('Location: ' . ($destinations[$user['role']] ?? BASE_URL . '/'));
         exit;
     }
@@ -470,6 +517,8 @@ class AuthController extends BaseController
         $user   = User::find($userId);
 
         User::updatePassword($userId, password_hash($next, PASSWORD_DEFAULT));
+        // Password reset also clears any prior failed-login count.
+        User::resetFailedLogins($userId);
         if ($grant['request_id']) {
             PasswordResetRequest::setStatus($grant['request_id'], 'completed');
         }

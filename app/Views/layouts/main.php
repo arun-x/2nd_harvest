@@ -70,8 +70,11 @@ $user = Auth::user() ?? null; // adjust to however app/Core/Auth.php exposes the
           <?php if ($user): ?>
             <?php
               $userInitial = strtoupper(mb_substr(trim($user->name ?? '?'), 0, 1)) ?: '?';
+              // Supermarket staff: the avatar chip links to their profile page.
+              $profileHref = (($user->role ?? '') === 'employee') ? BASE_URL . '/employee/profile' : null;
+              $chipTag = $profileHref ? 'a' : 'div';
             ?>
-            <div class="user-chip">
+            <<?= $chipTag ?> class="user-chip<?= $profileHref ? ' user-chip-link' : '' ?>"<?php if ($profileHref): ?> href="<?= htmlspecialchars($profileHref) ?>" title="View profile" aria-label="View your profile"<?php endif; ?>>
               <?php if (!empty($user->avatarUrl)): ?>
                 <img class="user-avatar" src="<?= htmlspecialchars($user->avatarUrl) ?>" alt="<?= htmlspecialchars($user->name) ?>">
               <?php else: ?>
@@ -81,7 +84,7 @@ $user = Auth::user() ?? null; // adjust to however app/Core/Auth.php exposes the
                 <div class="user-name"><?= htmlspecialchars($user->name) ?></div>
                 <div class="user-role"><?= htmlspecialchars($user->roleLabel ?? $user->role) ?></div>
               </div>
-            </div>
+            </<?= $chipTag ?>>
           <?php endif; ?>
         </div>
       </header>

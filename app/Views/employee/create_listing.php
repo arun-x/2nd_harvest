@@ -48,7 +48,7 @@ function field_error($errors, $name) {
   Resupply Network
 </div>
  
-<form class="form-layout" action="<?= BASE_URL ?>/employee/listings" method="post" novalidate>
+<form class="form-layout form-layout-single" action="<?= BASE_URL ?>/employee/listings" method="post" novalidate>
   <div>
     <section class="form-section">
       <h2 class="form-section-title">Basic Information</h2>
@@ -123,15 +123,4 @@ function field_error($errors, $name) {
     </div>
   </div>
  
-  <aside class="callout">
-    <div class="callout-title">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-      Best Practices
-    </div>
-    <ul>
-      <li>List items at least 2 hours before the pickup window starts.</li>
-      <li>Group smaller items into "Surplus Bags" for faster processing.</li>
-      <li>Ensure loading dock access is clear for rescue vehicles.</li>
-    </ul>
-  </aside>
 </form>
